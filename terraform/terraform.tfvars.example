@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars and fill in your values
+
+aws_region      = "eu-west-2"
+
+# For AWS free-tier (first 12 months), use these:
+#   ec2_instance_type = "t3.micro"
+#   db_instance_class = "db.t3.micro"
+# For cheapest outside free-tier:
+ec2_instance_type = "t4g.nano"
+db_instance_class = "db.t4g.micro"
+
+# Optional: set to an existing key pair name for SSH access
+# ec2_key_name = "my-key"
+
+db_password     = "CHANGE_ME_strong_password_here"
+auth0_domain    = "your-tenant.us.auth0.com"
+auth0_audience  = "https://streetmonopoly.api"
+auth0_client_id = "your-auth0-spa-client-id"
+mail_username   = "your-email@gmail.com"
+mail_password   = "your-gmail-app-password"

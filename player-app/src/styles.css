@@ -1,0 +1,410 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Monopoly board palette — warm, inviting, bold */
+  --bg: #FAF6EE;
+  --bg-warm: #F3ECE0;
+  --surface: #FFFFFF;
+  --surface-raised: #FFF9F0;
+  --border: #E2D9C8;
+  --border-strong: #C9BBA3;
+  --text: #1A1612;
+  --text-muted: #7A6F5F;
+  --text-dim: #B0A48F;
+
+  --monopoly-green: #1E6B45;
+  --monopoly-green-light: #E8F5EE;
+  --monopoly-red: #D32F2F;
+  --monopoly-red-light: #FDEAEA;
+  --monopoly-gold: #E8A817;
+  --monopoly-gold-light: #FFF8E1;
+  --monopoly-blue: #0D47A1;
+  --danger: #C62828;
+
+  /* Property colours */
+  --brown: #8B4513;
+  --light_blue: #AAD8E6;
+  --pink: #D81B60;
+  --orange: #E65100;
+  --red: #B71C1C;
+  --yellow: #F9A825;
+  --green: #2E7D32;
+  --dark_blue: #0D47A1;
+
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Outfit', sans-serif;
+  --radius: 12px;
+  --radius-lg: 18px;
+
+  --shadow-sm: 0 1px 3px rgba(26,22,18,0.06), 0 1px 2px rgba(26,22,18,0.04);
+  --shadow-md: 0 4px 12px rgba(26,22,18,0.08), 0 2px 4px rgba(26,22,18,0.04);
+  --shadow-lg: 0 12px 40px rgba(26,22,18,0.12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===================== CENTER / HERO SCREEN ===================== */
+.center-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 24px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(30,107,69,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(232,168,23,0.06) 0%, transparent 50%),
+    var(--bg);
+}
+
+.hero-icon { font-size: 72px; margin-bottom: 16px; }
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--monopoly-green);
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+
+.hero-sub { color: var(--text-muted); font-size: 16px; max-width: 300px; line-height: 1.6; }
+
+/* ===================== PLAYER HEADER ===================== */
+.player-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--monopoly-green);
+  color: #FFF;
+  padding: 14px 18px 12px;
+  box-shadow: 0 3px 16px rgba(30,107,69,0.3);
+}
+
+.player-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.game-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 900;
+  color: #FFF;
+  letter-spacing: -0.3px;
+}
+
+.balance-display { text-align: right; }
+
+.balance-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.65);
+  font-weight: 600;
+}
+
+.balance-value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.balance-positive { color: var(--monopoly-gold); }
+.balance-negative { color: #FF8A80; }
+
+/* ===================== CONTENT ===================== */
+.player-content {
+  padding: 16px;
+  padding-bottom: 100px;
+}
+
+/* ===================== COUNTDOWN ===================== */
+.countdown-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  text-align: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(30,107,69,0.07) 0%, transparent 60%),
+    var(--bg);
+}
+
+.countdown-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.countdown-timer {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 900;
+  color: var(--monopoly-red);
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+
+.countdown-date {
+  color: var(--text-dim);
+  font-size: 15px;
+}
+
+/* ===================== GAME OVER ===================== */
+.game-over-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  text-align: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(232,168,23,0.08) 0%, transparent 50%),
+    var(--bg);
+}
+
+.game-over-icon { font-size: 88px; margin-bottom: 16px; }
+
+.game-over-title {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.final-balance-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.final-balance-value {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 900;
+  margin-bottom: 20px;
+}
+
+.final-note {
+  color: var(--text-muted);
+  font-size: 14px;
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+/* ===================== STREET CARDS ===================== */
+.street-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.street-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+}
+
+.street-card:hover { box-shadow: var(--shadow-md); }
+
+.street-card.owned {
+  border-color: var(--monopoly-green);
+  background: var(--monopoly-green-light);
+  box-shadow: 0 2px 12px rgba(30,107,69,0.1);
+}
+
+.street-card.visited {
+  opacity: 0.65;
+}
+
+.street-colour-bar {
+  height: 6px;
+  width: 100%;
+}
+
+.street-card-body {
+  padding: 14px 16px;
+}
+
+.street-card-top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.street-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.street-status-badge {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.badge-owned { background: var(--monopoly-green-light); color: var(--monopoly-green); border: 1px solid rgba(30,107,69,0.2); }
+.badge-unvisited { background: var(--bg-warm); color: var(--text-muted); border: 1px solid var(--border); }
+.badge-visited-rent { background: var(--monopoly-red-light); color: var(--monopoly-red); border: 1px solid rgba(211,47,47,0.15); }
+.badge-visited-no-funds { background: var(--monopoly-gold-light); color: #B8860B; border: 1px solid rgba(232,168,23,0.2); }
+
+.street-prices {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.street-clue-img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  margin-top: 12px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+}
+
+/* ===================== CHECK IN BUTTON ===================== */
+.checkin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--monopoly-red);
+  color: #FFF;
+  box-shadow: 0 3px 12px rgba(211,47,47,0.25);
+  letter-spacing: 0.3px;
+}
+
+.checkin-btn:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 5px 20px rgba(211,47,47,0.3); }
+.checkin-btn:active { transform: translateY(0); }
+.checkin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.checkin-btn.loading {
+  background: var(--bg-warm);
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
+/* ===================== TOAST ===================== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 16px;
+  right: 16px;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  z-index: 200;
+  animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: var(--shadow-lg);
+}
+
+.toast-success { background: var(--monopoly-green); color: #FFF; }
+.toast-error { background: var(--monopoly-red); color: #FFF; }
+.toast-info { background: var(--monopoly-blue); color: #FFF; }
+
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ===================== GPS STATUS ===================== */
+.gps-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  font-weight: 500;
+}
+
+.gps-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.gps-dot.active { background: var(--monopoly-gold); box-shadow: 0 0 8px rgba(232,168,23,0.6); }
+.gps-dot.inactive { background: #FF8A80; }
+
+/* ===================== FILTER CHIPS ===================== */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.filter-chip {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 24px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-chip:hover { border-color: var(--border-strong); color: var(--text); }
+
+.filter-chip.active {
+  background: var(--monopoly-green);
+  border-color: var(--monopoly-green);
+  color: #FFF;
+  box-shadow: 0 2px 8px rgba(30,107,69,0.25);
+}
