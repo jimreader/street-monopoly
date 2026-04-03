@@ -17,28 +17,15 @@ public class EmailService {
     @Value("${app.player-url}")
     private String playerUrl;
 
-    @Value("${app.api-url}")
-    private String apiUrl;
-
-    public void sendInviteEmail(String toEmail, String playerName, String gameName, UUID inviteToken) {
-        String inviteLink = apiUrl + "/api/invite/" + inviteToken + "/accept";
-        String subject = "You're invited to play Street Monopoly: " + gameName;
-        String body = String.format(
-            "Hi %s,\n\nYou've been invited to play '%s' on Street Monopoly!\n\n" +
-            "Click the link below to accept your invitation:\n%s\n\n" +
-            "Get ready to hit the streets and build your empire!\n\nStreet Monopoly",
-            playerName, gameName, inviteLink
-        );
-        sendEmail(toEmail, subject, body);
-    }
-
     public void sendJoinEmail(String toEmail, String playerName, String gameName, UUID joinToken) {
         String joinLink = playerUrl + "/game/" + joinToken;
-        String subject = "You've joined Street Monopoly: " + gameName;
+        String subject = "You're in! Street Monopoly: " + gameName;
         String body = String.format(
-            "Hi %s,\n\nYou've accepted your invitation to '%s'!\n\n" +
-            "Use this link to access the game when it starts:\n%s\n\n" +
-            "Good luck!\n\nStreet Monopoly",
+            "Hi %s,\n\n" +
+            "You've been added to '%s' on Street Monopoly!\n\n" +
+            "Tap the link below to join the game:\n%s\n\n" +
+            "Save this link — you'll need it to play when the game starts.\n\n" +
+            "Good luck!\nStreet Monopoly",
             playerName, gameName, joinLink
         );
         sendEmail(toEmail, subject, body);

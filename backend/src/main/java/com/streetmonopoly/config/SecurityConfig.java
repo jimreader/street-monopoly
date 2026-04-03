@@ -40,8 +40,6 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Player-facing endpoints are public (secured by join token in the URL)
                 .requestMatchers("/api/player/**").permitAll()
-                // Invite acceptance is public (secured by invite token in the URL)
-                .requestMatchers("/api/invite/**").permitAll()
                 // Serve uploaded images publicly (player app needs them)
                 .requestMatchers(HttpMethod.GET, "/api/images/**").permitAll()
                 // Allow preflight CORS requests

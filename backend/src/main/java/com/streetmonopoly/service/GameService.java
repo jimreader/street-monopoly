@@ -85,6 +85,7 @@ public class GameService {
             throw new RuntimeException("Player already invited to this game");
         }
 
+        // Create the game-player link — immediately joined, no acceptance step
         GamePlayer gp = new GamePlayer();
         gp.setId(UUID.randomUUID());
         gp.setGameId(gameId);
@@ -93,26 +94,13 @@ public class GameService {
         gp.setInviteToken(UUID.randomUUID());
         gp.setJoinToken(UUID.randomUUID());
         gamePlayerMapper.insert(gp);
+        gamePlayerMapper.markJoined(gp.getId());
 
-        emailService.sendInviteEmail(player.getEmail(), player.getName(), game.getName(), gp.getInviteToken());
+        // Send them the game link directly — one click to play
+        emailService.sendJoinEmail(player.getEmail(), player.getName(), game.getName(), gp.getJoinToken());
 
         gp.setPlayer(player);
         return gp;
-    }
-
-    @Transactional
-    public GamePlayer acceptInvite(UUID inviteToken) {
-        GamePlayer gp = gamePlayerMapper.findByInviteToken(inviteToken);
-        if (gp == null) throw new RuntimeException("Invalid invite token");
-        if (gp.getJoinedAt() != null) throw new RuntimeException("Already joined");
-
-        gamePlayerMapper.markJoined(gp.getId());
-
-        Player player = playerMapper.findById(gp.getPlayerId());
-        Game game = gameMapper.findById(gp.getGameId());
-        emailService.sendJoinEmail(player.getEmail(), player.getName(), game.getName(), gp.getJoinToken());
-
-        return gamePlayerMapper.findByInviteToken(inviteToken);
     }
 
     public PlayerGameView getPlayerView(UUID joinToken) {

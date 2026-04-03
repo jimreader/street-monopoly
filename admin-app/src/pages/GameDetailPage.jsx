@@ -176,7 +176,6 @@ export function GameDetailPage() {
                   <tr>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>Status</th>
                     <th>Balance</th>
                   </tr>
                 </thead>
@@ -185,12 +184,6 @@ export function GameDetailPage() {
                     <tr key={gp.id}>
                       <td style={{ fontWeight: 500 }}>{gp.player?.name || '—'}</td>
                       <td style={{ color: 'var(--text-muted)' }}>{gp.player?.email || '—'}</td>
-                      <td>
-                        {gp.joinedAt
-                          ? <span className="badge badge-active">Joined</span>
-                          : <span className="badge badge-pending">Invited</span>
-                        }
-                      </td>
                       <td>£{parseFloat(gp.balance).toFixed(0)}</td>
                     </tr>
                   ))}
@@ -237,7 +230,7 @@ export function GameDetailPage() {
           <div className="modal">
             <h2 className="modal-title">Invite Player</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 20 }}>
-              An email will be sent with a link to accept the invitation.
+              The player will be sent an email with a link to join the game directly.
             </p>
             <form onSubmit={handleInvite}>
               <div className="form-group">
@@ -254,7 +247,7 @@ export function GameDetailPage() {
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowInvite(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Send Invitation</button>
+                <button type="submit" className="btn btn-primary">Add Player</button>
               </div>
             </form>
           </div>
