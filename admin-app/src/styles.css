@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,700&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
 :root {
   --bg: #FAF6EE;
@@ -20,8 +20,8 @@
   --danger-light: #FFEBEE;
   --brown: #8B4513; --light_blue: #AAD8E6; --pink: #D81B60; --orange: #E65100;
   --red: #B71C1C; --yellow: #F9A825; --green: #2E7D32; --dark_blue: #0D47A1;
-  --font-display: 'Fraunces', serif;
-  --font-body: 'Outfit', sans-serif;
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
   --radius: 10px;
   --radius-lg: 16px;
   --shadow-sm: 0 1px 3px rgba(26,22,18,0.06);
@@ -50,7 +50,7 @@ body {
 }
 .nav-brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #FFF; }
 .brand-icon { font-size: 22px; }
-.brand-text { font-family: var(--font-display); font-size: 18px; font-weight: 900; color: #FFF; }
+.brand-text { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #FFF; }
 .brand-badge {
   font-size: 8px; font-weight: 700; letter-spacing: 2px;
   background: var(--monopoly-gold); color: var(--text);
@@ -87,7 +87,7 @@ body {
 @media (min-width: 768px) { .main-content { padding: 28px 24px; } }
 
 .page-header { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
-.page-title { font-family: var(--font-display); font-size: 26px; font-weight: 900; color: var(--text); letter-spacing: -0.3px; }
+.page-title { font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
 .page-subtitle { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
 @media (min-width: 768px) { .page-title { font-size: 32px; } }
 
@@ -192,13 +192,13 @@ tr:last-child td { border-bottom: none; }
   .modal-overlay { align-items: center; }
   .modal { border-radius: var(--radius-lg); max-width: 520px; padding: 28px; }
 }
-.modal-title { font-family: var(--font-display); font-size: 22px; font-weight: 900; margin-bottom: 18px; }
+.modal-title { font-family: var(--font-display); font-size: 22px; font-weight: 800; margin-bottom: 18px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
 
 /* ========== LEADERBOARD ========== */
 .leaderboard-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .leaderboard-row:last-child { border-bottom: none; }
-.leaderboard-rank { font-family: var(--font-display); font-size: 26px; font-weight: 900; color: var(--text-dim); width: 36px; text-align: center; }
+.leaderboard-rank { font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--text-dim); width: 36px; text-align: center; }
 .leaderboard-rank.gold { color: var(--monopoly-gold); }
 .leaderboard-rank.silver { color: #90A4AE; }
 .leaderboard-rank.bronze { color: #A1887F; }

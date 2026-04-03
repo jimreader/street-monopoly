@@ -9,9 +9,6 @@ aws_region      = "eu-west-2"
 ec2_instance_type = "t4g.nano"
 db_instance_class = "db.t4g.micro"
 
-# Optional: set to an existing key pair name for SSH access
-# ec2_key_name = "my-key"
-
 db_password     = "CHANGE_ME_strong_password_here"
 auth0_domain    = "your-tenant.us.auth0.com"
 auth0_audience  = "https://streetmonopoly.api"

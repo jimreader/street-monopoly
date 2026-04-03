@@ -86,17 +86,7 @@ resource "aws_security_group" "ec2" {
     description = "Spring Boot API"
   }
 
-  # SSH (optional)
-  dynamic "ingress" {
-    for_each = var.ec2_key_name != "" ? [1] : []
-    content {
-      from_port   = 22
-      to_port     = 22
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-      description = "SSH"
-    }
-  }
+  # No SSH — use SSM Session Manager for shell access instead
 
   egress {
     from_port   = 0
@@ -201,6 +191,20 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+# Allow EC2 to download the JAR from S3 during deployment
+resource "aws_iam_role_policy" "ec2_s3_deploy" {
+  name = "${var.app_name}-ec2-s3-deploy"
+  role = aws_iam_role.ec2.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject"]
+      Resource = "${aws_s3_bucket.admin_app.arn}/deploy/*"
+    }]
+  })
+}
+
 resource "aws_iam_instance_profile" "ec2" {
   name = "${var.app_name}-ec2-profile"
   role = aws_iam_role.ec2.name
@@ -212,7 +216,6 @@ resource "aws_instance" "backend" {
   subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.ec2.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
-  key_name               = var.ec2_key_name != "" ? var.ec2_key_name : null
 
   root_block_device {
     volume_size = 10

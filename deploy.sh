@@ -40,37 +40,31 @@ deploy_backend() {
   cd "$SCRIPT_DIR/backend"
   mvn clean package -DskipTests
 
-  echo "📤 Uploading JAR to EC2..."
-  # Try SCP first (if SSH key is configured), fall back to SSM
-  if scp -o ConnectTimeout=5 -o StrictHostKeyChecking=no \
-      target/street-monopoly-api-1.0.0.jar "ec2-user@${EC2_IP}:/tmp/app.jar" 2>/dev/null; then
-    # Update CORS origins and app URLs in the env file, then deploy JAR
-    ssh -o StrictHostKeyChecking=no "ec2-user@${EC2_IP}" bash -s <<REMOTEOF
-      sudo sed -i "s|^APP_ADMIN_URL=.*|APP_ADMIN_URL=${ADMIN_URL}|" /opt/streetmonopoly/app.env
-      sudo sed -i "s|^APP_PLAYER_URL=.*|APP_PLAYER_URL=${PLAYER_URL}|" /opt/streetmonopoly/app.env
-      sudo sed -i "s|^APP_CORS_ALLOWED_ORIGINS=.*|APP_CORS_ALLOWED_ORIGINS=${ADMIN_URL},${PLAYER_URL}|" /opt/streetmonopoly/app.env
-      sudo mv /tmp/app.jar /opt/streetmonopoly/app.jar
-      sudo chown streetmonopoly:streetmonopoly /opt/streetmonopoly/app.jar
-      sudo systemctl restart streetmonopoly
-REMOTEOF
-  else
-    echo "   SCP failed — using SSM to transfer..."
-    TEMP_BUCKET="${ADMIN_BUCKET}"
-    aws s3 cp target/street-monopoly-api-1.0.0.jar "s3://${TEMP_BUCKET}/deploy/app.jar" --region "$REGION"
-    aws ssm send-command \
-      --instance-ids "$EC2_ID" \
-      --document-name "AWS-RunShellScript" \
-      --parameters "commands=[
-        'sed -i \"s|^APP_ADMIN_URL=.*|APP_ADMIN_URL=${ADMIN_URL}|\" /opt/streetmonopoly/app.env',
-        'sed -i \"s|^APP_PLAYER_URL=.*|APP_PLAYER_URL=${PLAYER_URL}|\" /opt/streetmonopoly/app.env',
-        'sed -i \"s|^APP_CORS_ALLOWED_ORIGINS=.*|APP_CORS_ALLOWED_ORIGINS=${ADMIN_URL},${PLAYER_URL}|\" /opt/streetmonopoly/app.env',
-        'aws s3 cp s3://${TEMP_BUCKET}/deploy/app.jar /opt/streetmonopoly/app.jar --region ${REGION}',
-        'chown streetmonopoly:streetmonopoly /opt/streetmonopoly/app.jar',
-        'systemctl restart streetmonopoly'
-      ]" \
-      --region "$REGION" > /dev/null
-    aws s3 rm "s3://${TEMP_BUCKET}/deploy/app.jar" --region "$REGION" 2>/dev/null || true
-  fi
+  echo "📤 Uploading JAR via S3..."
+  aws s3 cp target/street-monopoly-api-1.0.0.jar "s3://${ADMIN_BUCKET}/deploy/app.jar" --region "$REGION"
+
+  echo "🔄 Deploying to EC2 via SSM..."
+  COMMAND_ID=$(aws ssm send-command \
+    --instance-ids "$EC2_ID" \
+    --document-name "AWS-RunShellScript" \
+    --parameters "commands=[
+      'sed -i \"s|^APP_ADMIN_URL=.*|APP_ADMIN_URL=${ADMIN_URL}|\" /opt/streetmonopoly/app.env',
+      'sed -i \"s|^APP_PLAYER_URL=.*|APP_PLAYER_URL=${PLAYER_URL}|\" /opt/streetmonopoly/app.env',
+      'sed -i \"s|^APP_CORS_ALLOWED_ORIGINS=.*|APP_CORS_ALLOWED_ORIGINS=${ADMIN_URL},${PLAYER_URL}|\" /opt/streetmonopoly/app.env',
+      'aws s3 cp s3://${ADMIN_BUCKET}/deploy/app.jar /opt/streetmonopoly/app.jar --region ${REGION}',
+      'chown streetmonopoly:streetmonopoly /opt/streetmonopoly/app.jar',
+      'systemctl restart streetmonopoly'
+    ]" \
+    --region "$REGION" \
+    --query "Command.CommandId" --output text)
+
+  echo "   Waiting for deployment to complete (command: $COMMAND_ID)..."
+  aws ssm wait command-executed \
+    --command-id "$COMMAND_ID" \
+    --instance-id "$EC2_ID" \
+    --region "$REGION" 2>/dev/null || true
+
+  aws s3 rm "s3://${ADMIN_BUCKET}/deploy/app.jar" --region "$REGION" 2>/dev/null || true
 
   echo "✅ Backend deployed. It may take 15-30 seconds to start."
 }

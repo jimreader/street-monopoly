@@ -16,12 +16,6 @@ variable "ec2_instance_type" {
   default     = "t4g.nano"
 }
 
-variable "ec2_key_name" {
-  description = "Name of an existing EC2 key pair for SSH access (optional, leave empty to disable SSH)"
-  type        = string
-  default     = ""
-}
-
 variable "db_instance_class" {
   description = "RDS instance class. Use db.t3.micro for free-tier, db.t4g.micro for cheapest ARM"
   type        = string

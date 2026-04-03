@@ -170,7 +170,7 @@ export function GameScreen() {
             hour: '2-digit', minute: '2-digit'
           })}
         </p>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 24, marginTop: 32 }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, marginTop: 32 }}>
           {game.gameName}
         </h2>
       </div>
