@@ -110,6 +110,18 @@ resource "aws_security_group" "rds" {
     description     = "Postgres from EC2"
   }
 
+  # Optional: allow direct access from a specific IP (e.g. your home/office)
+  dynamic "ingress" {
+    for_each = var.db_allow_local_ip != "" ? [1] : []
+    content {
+      from_port   = 5432
+      to_port     = 5432
+      protocol    = "tcp"
+      cidr_blocks = ["${var.db_allow_local_ip}/32"]
+      description = "Postgres from local machine"
+    }
+  }
+
   tags = { Name = "${var.app_name}-rds-sg" }
 }
 
@@ -117,8 +129,9 @@ resource "aws_security_group" "rds" {
 # RDS — cheapest PostgreSQL
 # ===========================================================================
 resource "aws_db_subnet_group" "main" {
-  name       = "${var.app_name}-db-subnet"
-  subnet_ids = aws_subnet.private[*].id
+  name = "${var.app_name}-db-subnet"
+  # When local access is enabled, RDS needs public subnets to be reachable from the internet
+  subnet_ids = var.db_allow_local_ip != "" ? aws_subnet.public[*].id : aws_subnet.private[*].id
   tags       = { Name = "${var.app_name}-db-subnet" }
 }
 
@@ -138,7 +151,7 @@ resource "aws_db_instance" "postgres" {
   vpc_security_group_ids = [aws_security_group.rds.id]
 
   multi_az            = false
-  publicly_accessible = false
+  publicly_accessible = var.db_allow_local_ip != "" ? true : false
   skip_final_snapshot = true
 
   backup_retention_period = 7

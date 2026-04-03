@@ -62,3 +62,9 @@ variable "mail_password" {
   sensitive   = true
   default     = ""
 }
+
+variable "db_allow_local_ip" {
+  description = "Your public IP address to allow direct RDS access (e.g. 203.0.113.42). Leave empty to keep RDS private."
+  type        = string
+  default     = ""
+}

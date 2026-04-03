@@ -48,6 +48,29 @@ output "rds_endpoint" {
   value       = aws_db_instance.postgres.endpoint
 }
 
+output "db_connection_info" {
+  description = "Database connection details (shown only when local access is enabled)"
+  value = var.db_allow_local_ip != "" ? <<-EOT
+
+    ==========================================
+    DATABASE CONNECTION (local access enabled)
+    ==========================================
+    Host:     ${aws_db_instance.postgres.address}
+    Port:     ${aws_db_instance.postgres.port}
+    Database: ${aws_db_instance.postgres.db_name}
+    Username: ${var.db_username}
+    
+    JDBC URL: jdbc:postgresql://${aws_db_instance.postgres.endpoint}/${aws_db_instance.postgres.db_name}
+    
+    Restricted to IP: ${var.db_allow_local_ip}
+    
+    To disable, remove db_allow_local_ip from
+    terraform.tfvars and run terraform apply.
+    ==========================================
+  EOT
+  : "Local database access is disabled. Set db_allow_local_ip in terraform.tfvars to enable."
+}
+
 output "estimated_monthly_cost" {
   value = <<-EOT
 

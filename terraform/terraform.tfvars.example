@@ -15,3 +15,7 @@ auth0_audience  = "https://streetmonopoly.api"
 auth0_client_id = "your-auth0-spa-client-id"
 mail_username   = "your-email@gmail.com"
 mail_password   = "your-gmail-app-password"
+
+# Optional: set your public IP to allow direct database access from your machine.
+# Find your IP at https://whatismyipaddress.com — remove this line to keep RDS private.
+# db_allow_local_ip = "203.0.113.42"
