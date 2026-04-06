@@ -102,6 +102,7 @@ public class Dtos {
         private String mapName;
         private List<AdminStreetView> streets;
         private List<LeaderboardEntry> leaderboard;
+        private List<PlayerLocation> playerLocations;
     }
 
     @Data
@@ -130,5 +131,15 @@ public class Dtos {
         private BigDecimal finalBalance;
         private int streetsOwned;
         private int rank;
+    }
+
+    @Data
+    public static class PlayerLocation {
+        private UUID playerId;
+        private String playerName;
+        private String streetName;
+        private double latitude;
+        private double longitude;
+        private LocalDateTime visitedAt;
     }
 }

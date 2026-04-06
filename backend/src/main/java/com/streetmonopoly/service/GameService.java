@@ -343,6 +343,25 @@ public class GameService {
         }
         view.setLeaderboard(leaderboard);
 
+        // Build player last-known locations from most recent check-ins
+        List<PlayerLocation> playerLocations = new ArrayList<>();
+        List<StreetVisit> latestVisits = streetVisitMapper.findLatestVisitPerPlayer(gameId);
+        for (StreetVisit visit : latestVisits) {
+            Player visitPlayer = playerMapper.findById(visit.getPlayerId());
+            Street visitStreet = gameMapMapper.findStreetById(visit.getStreetId());
+            if (visitPlayer != null && visitStreet != null) {
+                PlayerLocation loc = new PlayerLocation();
+                loc.setPlayerId(visitPlayer.getId());
+                loc.setPlayerName(visitPlayer.getName());
+                loc.setStreetName(visitStreet.getName());
+                loc.setLatitude(visitStreet.getLatitude());
+                loc.setLongitude(visitStreet.getLongitude());
+                loc.setVisitedAt(visit.getVisitedAt());
+                playerLocations.add(loc);
+            }
+        }
+        view.setPlayerLocations(playerLocations);
+
         return view;
     }
 

@@ -24,4 +24,8 @@ public interface StreetVisitMapper {
 
     @Select("SELECT * FROM street_visit WHERE game_id = #{gameId} AND street_id = #{streetId}")
     List<StreetVisit> findByGameAndStreet(@Param("gameId") UUID gameId, @Param("streetId") UUID streetId);
+
+    @Select("SELECT DISTINCT ON (player_id) * FROM street_visit " +
+            "WHERE game_id = #{gameId} ORDER BY player_id, visited_at DESC")
+    List<StreetVisit> findLatestVisitPerPlayer(UUID gameId);
 }

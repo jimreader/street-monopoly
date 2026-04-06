@@ -1,6 +1,84 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { api } from '../api.js';
+
+// Distinct colours for player pins — matched to table dots
+const PLAYER_COLOURS = [
+  '#D32F2F', '#0D47A1', '#E65100', '#7B1FA2',
+  '#00838F', '#C62828', '#33691E', '#4527A0',
+  '#BF360C', '#006064', '#1B5E20', '#AD1457'
+];
+
+function createPlayerIcon(colour, initial) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:32px;height:32px;border-radius:50%;
+      background:${colour};border:3px solid #FFF;
+      box-shadow:0 2px 8px rgba(0,0,0,0.3);
+      display:flex;align-items:center;justify-content:center;
+      font-family:-apple-system,sans-serif;font-weight:700;
+      font-size:13px;color:#FFF;
+    ">${initial}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -18],
+  });
+}
+
+function PlayerLocationMap({ playerLocations, allPlayers }) {
+  // Build a colour index keyed by playerId matching table order
+  const colourMap = useMemo(() => {
+    const map = {};
+    allPlayers.forEach((gp, idx) => {
+      map[gp.playerId] = PLAYER_COLOURS[idx % PLAYER_COLOURS.length];
+    });
+    return map;
+  }, [allPlayers]);
+
+  // Calculate map center from player locations
+  const center = useMemo(() => {
+    if (playerLocations.length === 0) return [52.92, -1.47];
+    const avgLat = playerLocations.reduce((s, l) => s + l.latitude, 0) / playerLocations.length;
+    const avgLng = playerLocations.reduce((s, l) => s + l.longitude, 0) / playerLocations.length;
+    return [avgLat, avgLng];
+  }, [playerLocations]);
+
+  return (
+    <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1.5px solid var(--border)', marginBottom: 16, boxShadow: 'var(--shadow-md)' }}>
+      <MapContainer center={center} zoom={14} style={{ height: 300, width: '100%' }} scrollWheelZoom={true}>
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {playerLocations.map(loc => {
+          const colour = colourMap[loc.playerId] || '#D32F2F';
+          const initial = (loc.playerName || '?').charAt(0).toUpperCase();
+          return (
+            <Marker
+              key={loc.playerId}
+              position={[loc.latitude, loc.longitude]}
+              icon={createPlayerIcon(colour, initial)}
+            >
+              <Popup>
+                <strong>{loc.playerName}</strong><br />
+                Last seen: {loc.streetName}<br />
+                {loc.visitedAt && (
+                  <span style={{ fontSize: 12, color: '#666' }}>
+                    {new Date(loc.visitedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </Popup>
+            </Marker>
+          );
+        })}
+      </MapContainer>
+    </div>
+  );
+}
 
 export function GameDetailPage() {
   const { id } = useParams();
@@ -198,26 +276,62 @@ export function GameDetailPage() {
               <p>No players invited yet.</p>
             </div>
           ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Balance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {players.map(gp => (
-                    <tr key={gp.id}>
-                      <td style={{ fontWeight: 500 }}>{gp.player?.name || '—'}</td>
-                      <td style={{ color: 'var(--text-muted)' }}>{gp.player?.email || '—'}</td>
-                      <td>£{parseFloat(gp.balance).toFixed(0)}</td>
+            <>
+              {/* Player location map */}
+              {view.playerLocations && view.playerLocations.length > 0 && (
+                <PlayerLocationMap
+                  playerLocations={view.playerLocations}
+                  allPlayers={players}
+                />
+              )}
+
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Balance</th>
+                      <th>Last seen</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {players.map((gp, idx) => {
+                      const colour = PLAYER_COLOURS[idx % PLAYER_COLOURS.length];
+                      const lastLoc = view.playerLocations?.find(l => l.playerId === gp.playerId);
+                      return (
+                        <tr key={gp.id}>
+                          <td>
+                            <span style={{
+                              width: 12, height: 12, borderRadius: '50%', display: 'inline-block',
+                              background: colour, border: '2px solid rgba(0,0,0,0.1)'
+                            }} />
+                          </td>
+                          <td style={{ fontWeight: 500 }}>{gp.player?.name || '—'}</td>
+                          <td style={{ color: 'var(--text-muted)' }}>{gp.player?.email || '—'}</td>
+                          <td>£{parseFloat(gp.balance).toFixed(0)}</td>
+                          <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                            {lastLoc ? (
+                              <>
+                                {lastLoc.streetName}
+                                {lastLoc.visitedAt && (
+                                  <span style={{ color: 'var(--text-dim)', marginLeft: 4 }}>
+                                    {new Date(lastLoc.visitedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span style={{ color: 'var(--text-dim)' }}>Not checked in</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
