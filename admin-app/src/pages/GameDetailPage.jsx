@@ -331,6 +331,55 @@ export function GameDetailPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Rent income per player */}
+              {view.leaderboard.some(e => e.rentCollections?.length > 0) && (
+                <div style={{ marginTop: 20 }}>
+                  <h3 className="section-title">Rent Income</h3>
+                  {view.leaderboard.filter(e => e.rentCollections?.length > 0).map((entry, idx) => {
+                    const totalRent = entry.rentCollections.reduce((s, r) => s + parseFloat(r.amount), 0);
+                    return (
+                      <div key={entry.playerId} className="card" style={{ marginBottom: 12 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{
+                              width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                              background: PLAYER_COLOURS[players.findIndex(p => p.playerId === entry.playerId) % PLAYER_COLOURS.length] || 'var(--text-dim)',
+                              border: '2px solid rgba(0,0,0,0.1)'
+                            }} />
+                            <span style={{ fontWeight: 600, fontSize: 14 }}>{entry.playerName}</span>
+                          </div>
+                          <span style={{ fontWeight: 700, color: 'var(--monopoly-green)', fontSize: 14 }}>
+                            +£{totalRent.toFixed(0)} earned
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {entry.rentCollections.map((rc, i) => (
+                            <div key={i} style={{
+                              display: 'flex', alignItems: 'center', gap: 8, fontSize: 12,
+                              padding: '5px 8px', borderRadius: 'var(--radius)',
+                              background: 'var(--bg)'
+                            }}>
+                              <span style={{
+                                width: 8, height: 8, borderRadius: 3, flexShrink: 0,
+                                background: `var(--${rc.streetColour})`
+                              }} />
+                              <span style={{ fontWeight: 500, flex: 1 }}>{rc.streetName}</span>
+                              <span style={{ color: 'var(--text-muted)' }}>paid by {rc.paidByPlayerName}</span>
+                              <span style={{ fontWeight: 600, color: 'var(--monopoly-green)' }}>£{parseFloat(rc.amount).toFixed(0)}</span>
+                              {rc.collectedAt && (
+                                <span style={{ color: 'var(--text-dim)', fontSize: 10 }}>
+                                  {new Date(rc.collectedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
         </div>

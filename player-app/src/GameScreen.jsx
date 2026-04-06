@@ -16,6 +16,52 @@ const STATUS_BADGE_CLASS = {
   'visited_insufficient_funds': 'badge-visited-no-funds',
 };
 
+function RentIncomeList({ rentCollections }) {
+  if (!rentCollections || rentCollections.length === 0) return null;
+  const totalRent = rentCollections.reduce((s, r) => s + parseFloat(r.amount), 0);
+
+  return (
+    <div style={{
+      background: 'var(--surface)', border: '1.5px solid var(--border)',
+      borderRadius: 'var(--radius-lg)', overflow: 'hidden'
+    }}>
+      <div style={{
+        padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        borderBottom: '1px solid var(--border)', background: 'var(--bg-warm)'
+      }}>
+        <span style={{ fontWeight: 700, fontSize: 14 }}>Rent Income</span>
+        <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--monopoly-green)' }}>+£{totalRent.toFixed(0)}</span>
+      </div>
+      {rentCollections.map((rc, i) => (
+        <div key={i} style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+          borderBottom: i < rentCollections.length - 1 ? '1px solid var(--border)' : 'none',
+          fontSize: 13
+        }}>
+          <span style={{
+            width: 10, height: 10, borderRadius: 3, flexShrink: 0,
+            background: `var(--${rc.streetColour})`
+          }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 600 }}>{rc.streetName}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              Paid by {rc.paidByPlayerName}
+              {rc.collectedAt && (
+                <span style={{ marginLeft: 6, color: 'var(--text-dim)' }}>
+                  {new Date(rc.collectedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+            </div>
+          </div>
+          <span style={{ fontWeight: 700, color: 'var(--monopoly-green)', flexShrink: 0 }}>
+            +£{parseFloat(rc.amount).toFixed(0)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function GameScreen() {
   const { joinToken } = useParams();
   const [game, setGame] = useState(null);
@@ -182,36 +228,46 @@ export function GameScreen() {
     const owned = game.streets.filter(s => s.ownedByPlayer).length;
     const visited = game.streets.filter(s => s.visitStatus !== 'unvisited').length;
     const finalBal = game.finalBalance != null ? parseFloat(game.finalBalance) : parseFloat(game.balance);
+    const totalRent = (game.rentCollections || []).reduce((s, r) => s + parseFloat(r.amount), 0);
 
     return (
-      <div className="game-over-screen">
-        <div className="game-over-icon">🏁</div>
-        <h1 className="game-over-title">Game Over</h1>
-        <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>{game.gameName}</p>
+      <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
+        <div className="game-over-screen" style={{ minHeight: 'auto', paddingBottom: 20 }}>
+          <div className="game-over-icon">🏁</div>
+          <h1 className="game-over-title">Game Over</h1>
+          <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>{game.gameName}</p>
 
-        <p className="final-balance-label">Your Final Balance</p>
-        <div className={`final-balance-value ${finalBal >= 0 ? 'balance-positive' : 'balance-negative'}`}>
-          £{finalBal.toFixed(0)}
+          <p className="final-balance-label">Your Final Balance</p>
+          <div className={`final-balance-value ${finalBal >= 0 ? 'balance-positive' : 'balance-negative'}`}>
+            £{finalBal.toFixed(0)}
+          </div>
+
+          <div style={{ display: 'flex', gap: 24, marginBottom: 24 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-green)' }}>{owned}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Streets owned</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 700 }}>{visited}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Streets visited</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-green)' }}>£{totalRent.toFixed(0)}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Rent earned</div>
+            </div>
+          </div>
+
+          <p className="final-note">
+            Unvisited street rental values have been deducted from your balance. Thanks for playing!
+          </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 24, marginBottom: 24 }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-green)' }}>{owned}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Streets owned</div>
+        {/* Rent income summary */}
+        {game.rentCollections && game.rentCollections.length > 0 && (
+          <div style={{ padding: '0 16px 40px' }}>
+            <RentIncomeList rentCollections={game.rentCollections} />
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 700 }}>{visited}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Streets visited</div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--danger)' }}>{game.streets.length - visited}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Unvisited</div>
-          </div>
-        </div>
-
-        <p className="final-note">
-          Unvisited street rental values have been deducted from your balance. Thanks for playing!
-        </p>
+        )}
       </div>
     );
   }
@@ -329,6 +385,13 @@ export function GameScreen() {
         {filteredStreets.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
             No streets match this filter.
+          </div>
+        )}
+
+        {/* Rent income during active game */}
+        {game.rentCollections && game.rentCollections.length > 0 && (
+          <div style={{ marginTop: 20 }}>
+            <RentIncomeList rentCollections={game.rentCollections} />
           </div>
         )}
       </div>

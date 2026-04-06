@@ -73,6 +73,7 @@ public class Dtos {
         private BigDecimal finalBalance;
         private int proximityMetres;
         private List<PlayerStreetView> streets;
+        private List<RentCollection> rentCollections;
     }
 
     @Data
@@ -87,6 +88,16 @@ public class Dtos {
         private String imageClueUrl;
         private String visitStatus; // unvisited, owned, visited_rent, visited_no_funds
         private boolean ownedByPlayer;
+    }
+
+    // ---- Rent collection record ----
+    @Data
+    public static class RentCollection {
+        private String streetName;
+        private String streetColour;
+        private String paidByPlayerName;
+        private BigDecimal amount;
+        private LocalDateTime collectedAt;
     }
 
     // ---- Admin Game View ----
@@ -131,6 +142,7 @@ public class Dtos {
         private BigDecimal finalBalance;
         private int streetsOwned;
         private int rank;
+        private List<RentCollection> rentCollections;
     }
 
     @Data

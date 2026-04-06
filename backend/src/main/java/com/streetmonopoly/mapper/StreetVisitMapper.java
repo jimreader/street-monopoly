@@ -28,4 +28,10 @@ public interface StreetVisitMapper {
     @Select("SELECT DISTINCT ON (player_id) * FROM street_visit " +
             "WHERE game_id = #{gameId} ORDER BY player_id, visited_at DESC")
     List<StreetVisit> findLatestVisitPerPlayer(UUID gameId);
+
+    @Select("SELECT sv.* FROM street_visit sv " +
+            "JOIN game_street gs ON sv.game_id = gs.game_id AND sv.street_id = gs.street_id " +
+            "WHERE sv.game_id = #{gameId} AND gs.owner_player_id = #{ownerPlayerId} " +
+            "AND sv.visit_type = 'rent_paid' ORDER BY sv.visited_at DESC")
+    List<StreetVisit> findRentPaidToOwner(@Param("gameId") UUID gameId, @Param("ownerPlayerId") UUID ownerPlayerId);
 }

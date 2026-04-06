@@ -151,6 +151,7 @@ public class GameService {
             streetViews.add(sv);
         }
         view.setStreets(streetViews);
+        view.setRentCollections(buildRentCollections(game.getId(), gp.getPlayerId()));
         return view;
     }
 
@@ -326,6 +327,7 @@ public class GameService {
             entry.setBalance(gp.getBalance());
             entry.setFinalBalance(gp.getFinalBalance());
             entry.setStreetsOwned(gameStreetMapper.countOwnedByPlayer(gameId, player.getId()));
+            entry.setRentCollections(buildRentCollections(gameId, player.getId()));
             leaderboard.add(entry);
         }
 
@@ -431,5 +433,28 @@ public class GameService {
                 Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
+    }
+
+    /**
+     * Build rent collection records for a given property owner.
+     * Shows which of their streets have earned rent, who paid it, and when.
+     */
+    private List<RentCollection> buildRentCollections(UUID gameId, UUID ownerPlayerId) {
+        List<RentCollection> collections = new ArrayList<>();
+        List<StreetVisit> rentVisits = streetVisitMapper.findRentPaidToOwner(gameId, ownerPlayerId);
+        for (StreetVisit rv : rentVisits) {
+            Street street = gameMapMapper.findStreetById(rv.getStreetId());
+            Player payer = playerMapper.findById(rv.getPlayerId());
+            if (street != null && payer != null) {
+                RentCollection rc = new RentCollection();
+                rc.setStreetName(street.getName());
+                rc.setStreetColour(street.getColour());
+                rc.setPaidByPlayerName(payer.getName());
+                rc.setAmount(rv.getAmount());
+                rc.setCollectedAt(rv.getVisitedAt());
+                collections.add(rc);
+            }
+        }
+        return collections;
     }
 }
