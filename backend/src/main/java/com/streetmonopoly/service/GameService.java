@@ -297,6 +297,22 @@ public class GameService {
                 Player owner = playerMapper.findById(gs.getOwnerPlayerId());
                 sv.setOwnerName(owner != null ? owner.getName() : null);
             }
+
+            // Populate visitors for this street
+            List<StreetVisitor> visitors = new ArrayList<>();
+            List<StreetVisit> visits = streetVisitMapper.findByGameAndStreet(gameId, street.getId());
+            for (StreetVisit visit : visits) {
+                Player visitPlayer = playerMapper.findById(visit.getPlayerId());
+                if (visitPlayer != null) {
+                    StreetVisitor visitor = new StreetVisitor();
+                    visitor.setPlayerName(visitPlayer.getName());
+                    visitor.setVisitType(visit.getVisitType());
+                    visitor.setVisitedAt(visit.getVisitedAt());
+                    visitors.add(visitor);
+                }
+            }
+            sv.setVisitors(visitors);
+
             streetViews.add(sv);
         }
         view.setStreets(streetViews);

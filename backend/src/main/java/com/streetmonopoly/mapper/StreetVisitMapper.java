@@ -21,4 +21,7 @@ public interface StreetVisitMapper {
 
     @Select("SELECT * FROM street_visit WHERE game_id = #{gameId}")
     List<StreetVisit> findByGameId(UUID gameId);
+
+    @Select("SELECT * FROM street_visit WHERE game_id = #{gameId} AND street_id = #{streetId}")
+    List<StreetVisit> findByGameAndStreet(@Param("gameId") UUID gameId, @Param("streetId") UUID streetId);
 }

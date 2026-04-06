@@ -138,6 +138,7 @@ export function GameDetailPage() {
                 <th>Price</th>
                 <th>Rent</th>
                 <th>Owner</th>
+                <th>Visitors</th>
               </tr>
             </thead>
             <tbody>
@@ -149,6 +150,33 @@ export function GameDetailPage() {
                   <td>£{parseFloat(s.rentalPrice).toFixed(0)}</td>
                   <td style={{ color: s.ownerName ? 'var(--monopoly-green)' : 'var(--text-dim)' }}>
                     {s.ownerName || 'Available'}
+                  </td>
+                  <td>
+                    {(!s.visitors || s.visitors.length === 0) ? (
+                      <span style={{ color: 'var(--text-dim)', fontSize: 12 }}>—</span>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {s.visitors.map((v, i) => (
+                          <span key={i} style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                            <span style={{
+                              width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                              background: v.visitType === 'purchased' ? 'var(--monopoly-green)'
+                                : v.visitType === 'rent_paid' ? 'var(--monopoly-red)'
+                                : 'var(--monopoly-gold)'
+                            }} />
+                            <span style={{ color: 'var(--text-muted)' }}>{v.playerName}</span>
+                            <span style={{ color: 'var(--text-dim)', fontSize: 11 }}>
+                              {v.visitType === 'purchased' ? '(bought)' : v.visitType === 'rent_paid' ? '(rent)' : '(no funds)'}
+                            </span>
+                            {v.visitedAt && (
+                              <span style={{ color: 'var(--text-dim)', fontSize: 10 }}>
+                                {new Date(v.visitedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

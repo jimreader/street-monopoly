@@ -112,6 +112,14 @@ public class Dtos {
         private BigDecimal rentalPrice;
         private String colour;
         private String ownerName;
+        private List<StreetVisitor> visitors;
+    }
+
+    @Data
+    public static class StreetVisitor {
+        private String playerName;
+        private String visitType;
+        private LocalDateTime visitedAt;
     }
 
     @Data
