@@ -151,7 +151,7 @@ export function GameScreen() {
   if (!game) {
     return (
       <div className="center-screen">
-        <div className="hero-icon" style={{ animation: 'pulse 2s infinite' }}>🏙️</div>
+        <img src="/logo.svg" alt="Road Rush" style={{ height: 36, animation: 'pulse 2s infinite' }} />
         <p className="hero-sub">Loading game...</p>
       </div>
     );

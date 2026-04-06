@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Log everything
 exec > >(tee /var/log/user-data.log) 2>&1
-echo "=== Street Monopoly EC2 setup starting ==="
+echo "=== Road Rush EC2 setup starting ==="
 
 # Install Java 21
 dnf install -y java-21-amazon-corretto-headless
@@ -36,7 +36,7 @@ chown streetmonopoly:streetmonopoly /opt/streetmonopoly/app.env
 # Create systemd service
 cat > /etc/systemd/system/streetmonopoly.service << 'SVCEOF'
 [Unit]
-Description=Street Monopoly API
+Description=Road Rush API
 After=network.target
 
 [Service]

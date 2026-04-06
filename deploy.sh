@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# Street Monopoly — Build & Deploy (EC2 edition)
+# Road Rush — Build & Deploy (EC2 edition)
 #
 # Prerequisites:
 #   - AWS CLI configured

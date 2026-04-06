@@ -18,8 +18,7 @@ function Nav() {
   return (
     <nav className="nav">
       <Link to="/" className="nav-brand">
-        <span className="brand-icon">🏙️</span>
-        <span className="brand-text">Street Monopoly</span>
+        <img src="/logo.svg" alt="Road Rush" style={{ height: 26 }} />
         <span className="brand-badge">ADMIN</span>
       </Link>
       <div className="nav-links">

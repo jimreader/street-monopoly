@@ -292,7 +292,7 @@ resource "aws_cloudfront_origin_access_control" "admin_app" {
 resource "aws_cloudfront_distribution" "admin_app" {
   enabled             = true
   default_root_object = "index.html"
-  comment             = "Street Monopoly Admin"
+  comment             = "Road Rush Admin"
 
   origin {
     domain_name              = aws_s3_bucket.admin_app.bucket_regional_domain_name
@@ -411,7 +411,7 @@ resource "aws_cloudfront_origin_access_control" "player_app" {
 resource "aws_cloudfront_distribution" "player_app" {
   enabled             = true
   default_root_object = "index.html"
-  comment             = "Street Monopoly Player"
+  comment             = "Road Rush Player"
 
   origin {
     domain_name              = aws_s3_bucket.player_app.bucket_regional_domain_name

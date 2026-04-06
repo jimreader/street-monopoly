@@ -1,4 +1,4 @@
-# Street Monopoly 🏙️
+# Road Rush 🏙️
 
 A real-world location-based Monopoly game where players physically visit streets to purchase them. Built as three components: a Spring Boot REST API, an admin React app, and a player React app.
 
@@ -145,7 +145,7 @@ Sign up for a free account at [auth0.com](https://auth0.com). The free plan supp
 In the Auth0 Dashboard under **Applications → APIs**:
 
 1. Click **+ Create API**
-2. Set the **Name** to `Street Monopoly API`
+2. Set the **Name** to `Road Rush API`
 3. Set the **Identifier** to `https://streetmonopoly.api` (this is the audience)
 4. Leave **Signing Algorithm** as `RS256`
 5. Click **Create**
@@ -155,7 +155,7 @@ In the Auth0 Dashboard under **Applications → APIs**:
 In the Auth0 Dashboard under **Applications → Applications**:
 
 1. Click **+ Create Application**
-2. Set the **Name** to `Street Monopoly Admin`
+2. Set the **Name** to `Road Rush Admin`
 3. Select **Single Page Web Applications**
 4. Click **Create**
 5. Go to the **Settings** tab and configure:

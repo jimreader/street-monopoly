@@ -7,8 +7,7 @@ import './styles.css';
 function Home() {
   return (
     <div className="center-screen">
-      <div className="hero-icon">🏙️</div>
-      <h1 className="hero-title">Street Monopoly</h1>
+      <img src="/logo.svg" alt="Road Rush" style={{ height: 44, marginBottom: 20, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.15))' }} />
       <p className="hero-sub">Use the link from your invitation email to join a game.</p>
     </div>
   );
