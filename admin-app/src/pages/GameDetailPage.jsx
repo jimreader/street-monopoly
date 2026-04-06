@@ -69,7 +69,7 @@ export function GameDetailPage() {
             <span>📍 {view.proximityMetres}m</span>
           </div>
         </div>
-        {view.status === 'pending' && (
+        {(view.status === 'pending' || view.status === 'active') && (
           <button className="btn btn-primary" onClick={() => setShowInvite(true)}>+ Invite Player</button>
         )}
       </div>
@@ -159,7 +159,7 @@ export function GameDetailPage() {
 
       {tab === 'players' && (
         <div>
-          {view.status === 'pending' && (
+          {(view.status === 'pending' || view.status === 'active') && (
             <div style={{ marginBottom: 16 }}>
               <button className="btn btn-primary btn-sm" onClick={() => setShowInvite(true)}>+ Invite Player</button>
             </div>

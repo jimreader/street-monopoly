@@ -138,7 +138,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "postgres" {
   identifier     = "${var.app_name}-db"
   engine         = "postgres"
-  engine_version = "16.4"
+  engine_version = "18.3"
   instance_class = var.db_instance_class
 
   allocated_storage     = 20
@@ -231,7 +231,7 @@ resource "aws_instance" "backend" {
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
 
   root_block_device {
-    volume_size = 10
+    volume_size = 30
     volume_type = "gp3"
   }
 

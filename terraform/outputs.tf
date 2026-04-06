@@ -50,7 +50,7 @@ output "rds_endpoint" {
 
 output "db_connection_info" {
   description = "Database connection details (shown only when local access is enabled)"
-  value = var.db_allow_local_ip != "" ? <<-EOT
+  value = var.db_allow_local_ip == "" ? "Local database access is disabled. Set db_allow_local_ip in terraform.tfvars to enable." :  <<-EOT
 
     ==========================================
     DATABASE CONNECTION (local access enabled)
@@ -68,7 +68,6 @@ output "db_connection_info" {
     terraform.tfvars and run terraform apply.
     ==========================================
   EOT
-  : "Local database access is disabled. Set db_allow_local_ip in terraform.tfvars to enable."
 }
 
 output "estimated_monthly_cost" {
