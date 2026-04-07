@@ -16,18 +16,25 @@ public class PlayerController {
     private GameService gameService;
 
     /**
-     * Get the player's view of their game (uses join token for auth)
+     * Get the player's view of their game.
+     * The X-Device-Token header binds this player to a single device.
+     * First call sets the token; subsequent calls from a different device are rejected.
      */
     @GetMapping("/game/{joinToken}")
-    public PlayerGameView getGameView(@PathVariable UUID joinToken) {
-        return gameService.getPlayerView(joinToken);
+    public PlayerGameView getGameView(
+            @PathVariable UUID joinToken,
+            @RequestHeader(value = "X-Device-Token", required = false) String deviceToken) {
+        return gameService.getPlayerView(joinToken, deviceToken);
     }
 
     /**
-     * Check in at a street location
+     * Check in at a street location.
      */
     @PostMapping("/game/{joinToken}/checkin")
-    public CheckInResponse checkIn(@PathVariable UUID joinToken, @Valid @RequestBody CheckInRequest request) {
-        return gameService.checkIn(joinToken, request);
+    public CheckInResponse checkIn(
+            @PathVariable UUID joinToken,
+            @RequestHeader(value = "X-Device-Token", required = false) String deviceToken,
+            @Valid @RequestBody CheckInRequest request) {
+        return gameService.checkIn(joinToken, deviceToken, request);
     }
 }

@@ -49,6 +49,9 @@ public interface GamePlayerMapper {
     @Update("UPDATE game_player SET final_balance = #{finalBalance} WHERE id = #{id}")
     void updateFinalBalance(@Param("id") UUID id, @Param("finalBalance") BigDecimal finalBalance);
 
+    @Update("UPDATE game_player SET device_token = #{deviceToken} WHERE id = #{id}")
+    void updateDeviceToken(@Param("id") UUID id, @Param("deviceToken") String deviceToken);
+
     @Select("SELECT gp.* FROM game_player gp WHERE gp.game_id = #{gameId}")
     List<GamePlayer> findAllByGameId(UUID gameId);
 }

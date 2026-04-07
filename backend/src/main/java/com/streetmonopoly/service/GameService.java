@@ -103,9 +103,11 @@ public class GameService {
         return gp;
     }
 
-    public PlayerGameView getPlayerView(UUID joinToken) {
+    public PlayerGameView getPlayerView(UUID joinToken, String deviceToken) {
         GamePlayer gp = gamePlayerMapper.findByJoinToken(joinToken);
         if (gp == null) throw new RuntimeException("Invalid join token");
+
+        validateAndBindDevice(gp, deviceToken);
 
         Game game = gameMapper.findById(gp.getGameId());
         List<GameStreet> gameStreets = gameStreetMapper.findByGameId(game.getId());
@@ -156,9 +158,11 @@ public class GameService {
     }
 
     @Transactional
-    public CheckInResponse checkIn(UUID joinToken, CheckInRequest request) {
+    public CheckInResponse checkIn(UUID joinToken, String deviceToken, CheckInRequest request) {
         GamePlayer gp = gamePlayerMapper.findByJoinToken(joinToken);
         if (gp == null) throw new RuntimeException("Invalid join token");
+
+        validateAndBindDevice(gp, deviceToken);
 
         Game game = gameMapper.findById(gp.getGameId());
         CheckInResponse response = new CheckInResponse();
@@ -418,6 +422,22 @@ public class GameService {
 
     public List<GamePlayer> getGamePlayers(UUID gameId) {
         return gamePlayerMapper.findByGameId(gameId);
+    }
+
+    /**
+     * Bind a player to a single device. On the first request that includes a device token,
+     * the token is stored. Subsequent requests from a different device are rejected.
+     */
+    private void validateAndBindDevice(GamePlayer gp, String deviceToken) {
+        if (deviceToken == null || deviceToken.isBlank()) return; // no token provided — allow (backwards compat)
+
+        if (gp.getDeviceToken() == null) {
+            // First device to connect — bind it
+            gamePlayerMapper.updateDeviceToken(gp.getId(), deviceToken);
+            gp.setDeviceToken(deviceToken);
+        } else if (!gp.getDeviceToken().equals(deviceToken)) {
+            throw new RuntimeException("This game can only be played from the device you originally joined on.");
+        }
     }
 
     /**

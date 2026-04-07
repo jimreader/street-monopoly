@@ -16,6 +16,7 @@ public class GamePlayer {
     private LocalDateTime invitedAt;
     private LocalDateTime joinedAt;
     private BigDecimal finalBalance;
+    private String deviceToken;
 
     // Joined
     private Player player;
