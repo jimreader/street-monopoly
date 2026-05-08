@@ -6,6 +6,11 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  # Partial backend config — bucket/region/key are supplied at terraform init time.
+  # Locally:  terraform init -backend-config="bucket=YOUR_STATE_BUCKET" -backend-config="region=eu-west-2" -backend-config="key=street-monopoly/terraform.tfstate"
+  # In CI:    see .github/workflows/teardown.yml (uses TF_STATE_BUCKET variable)
+  backend "s3" {}
 }
 
 provider "aws" {
