@@ -1,13 +1,17 @@
 package com.streetmonopoly.controller;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -16,12 +20,8 @@ import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -34,11 +34,16 @@ public class ImageController {
     private static final int MAX_WIDTH = 800;
     private static final float JPEG_QUALITY = 0.80f;
 
-    private final Path uploadDir;
+    private final S3Client s3;
+    private final String bucket;
 
-    public ImageController(@Value("${app.upload-dir:./uploads}") String uploadPath) throws IOException {
-        this.uploadDir = Paths.get(uploadPath).toAbsolutePath().normalize();
-        Files.createDirectories(this.uploadDir);
+    public ImageController(
+            @Value("${app.images-bucket}") String bucket,
+            @Value("${app.images-region:eu-west-2}") String region) {
+        this.bucket = bucket;
+        this.s3 = S3Client.builder()
+                .region(Region.of(region))
+                .build();
     }
 
     @PostMapping("/upload")
@@ -52,60 +57,51 @@ public class ImageController {
             throw new RuntimeException("Only image files are allowed");
         }
 
-        // Read the uploaded image
         BufferedImage original = ImageIO.read(file.getInputStream());
         if (original == null) {
             throw new RuntimeException("Could not read image file");
         }
 
-        // Resize if wider than MAX_WIDTH, maintaining aspect ratio
         BufferedImage resized = resizeImage(original, MAX_WIDTH);
-
-        // Always save as JPEG for consistent compression
         String filename = UUID.randomUUID() + ".jpg";
-        Path target = uploadDir.resolve(filename);
+        byte[] bytes = toJpegBytes(resized, JPEG_QUALITY);
 
-        writeJpeg(resized, target, JPEG_QUALITY);
+        s3.putObject(
+                PutObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(filename)
+                        .contentType("image/jpeg")
+                        .build(),
+                RequestBody.fromBytes(bytes));
 
-        String imageUrl = "/api/images/" + filename;
-        return Map.of("url", imageUrl, "filename", filename);
+        return Map.of("url", "/api/images/" + filename, "filename", filename);
     }
 
     @GetMapping("/{filename}")
-    public ResponseEntity<Resource> getImage(@PathVariable String filename) throws MalformedURLException {
-        // Sanitise filename to prevent directory traversal
+    public ResponseEntity<byte[]> getImage(@PathVariable String filename) throws IOException {
         if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
             return ResponseEntity.badRequest().build();
         }
 
-        Path filePath = uploadDir.resolve(filename).normalize();
-        Resource resource = new UrlResource(filePath.toUri());
+        try {
+            byte[] bytes = s3.getObjectAsBytes(
+                    GetObjectRequest.builder().bucket(bucket).key(filename).build()
+            ).asByteArray();
 
-        if (!resource.exists()) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .cacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic())
+                    .body(bytes);
+        } catch (NoSuchKeyException e) {
             return ResponseEntity.notFound().build();
         }
-
-        String mediaType = "image/jpeg";
-        if (filename.endsWith(".png")) mediaType = "image/png";
-        else if (filename.endsWith(".webp")) mediaType = "image/webp";
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(mediaType))
-                .cacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic())
-                .body(resource);
     }
 
-    /**
-     * Resize an image to fit within maxWidth, preserving aspect ratio.
-     * If the image is already smaller, it is returned unchanged.
-     * Handles transparency by drawing onto a white background (for JPEG output).
-     */
     private BufferedImage resizeImage(BufferedImage original, int maxWidth) {
         int origWidth = original.getWidth();
         int origHeight = original.getHeight();
 
         if (origWidth <= maxWidth) {
-            // Still need to flatten alpha for JPEG
             return flattenAlpha(original);
         }
 
@@ -126,9 +122,6 @@ public class ImageController {
         return resized;
     }
 
-    /**
-     * Flatten any alpha channel onto a white background for JPEG output.
-     */
     private BufferedImage flattenAlpha(BufferedImage image) {
         if (image.getType() == BufferedImage.TYPE_INT_RGB) {
             return image;
@@ -142,10 +135,7 @@ public class ImageController {
         return flat;
     }
 
-    /**
-     * Write a BufferedImage as JPEG with the specified quality (0.0 - 1.0).
-     */
-    private void writeJpeg(BufferedImage image, Path target, float quality) throws IOException {
+    private byte[] toJpegBytes(BufferedImage image, float quality) throws IOException {
         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpg");
         if (!writers.hasNext()) {
             throw new RuntimeException("No JPEG writer available");
@@ -156,12 +146,13 @@ public class ImageController {
         params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
         params.setCompressionQuality(quality);
 
-        try (OutputStream os = Files.newOutputStream(target);
-             ImageOutputStream ios = ImageIO.createImageOutputStream(os)) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
             writer.setOutput(ios);
             writer.write(null, new IIOImage(image, null, null), params);
         } finally {
             writer.dispose();
         }
+        return baos.toByteArray();
     }
 }

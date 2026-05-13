@@ -10,7 +10,6 @@ dnf install -y java-21-amazon-corretto-headless
 
 # Create app user
 useradd -r -s /bin/false streetmonopoly || true
-mkdir -p /opt/streetmonopoly/uploads
 chown -R streetmonopoly:streetmonopoly /opt/streetmonopoly
 
 # Write environment file
@@ -26,7 +25,8 @@ APP_ADMIN_URL=${admin_url}
 APP_PLAYER_URL=${player_url}
 APP_API_URL=http://localhost:8080
 APP_CORS_ALLOWED_ORIGINS=${admin_url},${player_url}
-APP_UPLOAD_DIR=/opt/streetmonopoly/uploads
+IMAGES_BUCKET=${images_bucket}
+AWS_REGION=${aws_region}
 JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75.0 -XX:+UseSerialGC
 ENVEOF
 

@@ -30,6 +30,7 @@ ADMIN_CF_ID=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw admin_cloudfro
 PLAYER_CF_ID=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw player_cloudfront_id)
 ADMIN_URL=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw admin_app_url)
 PLAYER_URL=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw player_app_url)
+IMAGES_BUCKET=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw images_s3_bucket)
 
 COMPONENT="${1:-all}"
 
@@ -51,6 +52,7 @@ deploy_backend() {
       'sed -i \"s|^APP_ADMIN_URL=.*|APP_ADMIN_URL=${ADMIN_URL}|\" /opt/streetmonopoly/app.env',
       'sed -i \"s|^APP_PLAYER_URL=.*|APP_PLAYER_URL=${PLAYER_URL}|\" /opt/streetmonopoly/app.env',
       'sed -i \"s|^APP_CORS_ALLOWED_ORIGINS=.*|APP_CORS_ALLOWED_ORIGINS=${ADMIN_URL},${PLAYER_URL}|\" /opt/streetmonopoly/app.env',
+      'sed -i \"s|^IMAGES_BUCKET=.*|IMAGES_BUCKET=${IMAGES_BUCKET}|\" /opt/streetmonopoly/app.env',
       'aws s3 cp s3://${ADMIN_BUCKET}/deploy/app.jar /opt/streetmonopoly/app.jar --region ${REGION}',
       'chown streetmonopoly:streetmonopoly /opt/streetmonopoly/app.jar',
       'systemctl restart streetmonopoly'
