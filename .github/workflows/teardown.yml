@@ -1,0 +1,79 @@
+# GitHub Actions — Tear Down AWS Infrastructure
+#
+# Runs terraform destroy to permanently remove all AWS resources.
+# This is irreversible. Trigger manually from:
+#   GitHub → Actions → Tear Down Infrastructure → Run workflow
+#
+# Prerequisites — add these alongside the existing deploy.yml secrets/variables:
+#
+# New Secret:
+#   TF_VAR_DB_PASSWORD      — PostgreSQL master password (same value as db_password in terraform.tfvars)
+#   TF_VAR_MAIL_PASSWORD    — SMTP password (same value as mail_password in terraform.tfvars)
+#
+# New Variables:
+#   TF_STATE_BUCKET         — Name of the S3 bucket holding Terraform state
+#   TF_VAR_AUTH0_DOMAIN     — Auth0 tenant domain (e.g. dev-abc123.us.auth0.com)
+#   TF_VAR_AUTH0_AUDIENCE   — Auth0 API audience (e.g. https://streetmonopoly.api)
+#   TF_VAR_AUTH0_CLIENT_ID  — Auth0 SPA client ID
+#   TF_VAR_MAIL_USERNAME    — SMTP username
+#
+# One-time local setup (migrate state from local to S3):
+#   1. Create an S3 bucket for state (e.g. aws s3 mb s3://my-tf-state-bucket --region eu-west-2)
+#   2. cd terraform
+#   3. terraform init \
+#        -migrate-state \
+#        -backend-config="bucket=YOUR_STATE_BUCKET" \
+#        -backend-config="region=eu-west-2" \
+#        -backend-config="key=street-monopoly/terraform.tfstate"
+
+name: Tear Down Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DESTROY to confirm permanent removal of all AWS infrastructure"
+        required: true
+
+jobs:
+  teardown:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Confirm destroy
+        if: github.event.inputs.confirm != 'DESTROY'
+        run: |
+          echo "Confirmation failed — you must type DESTROY (all caps) to proceed."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Terraform init
+        working-directory: terraform
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="key=street-monopoly/terraform.tfstate" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
+
+      - name: Terraform destroy
+        working-directory: terraform
+        env:
+          TF_VAR_db_password: ${{ secrets.TF_VAR_DB_PASSWORD }}
+          TF_VAR_mail_password: ${{ secrets.TF_VAR_MAIL_PASSWORD }}
+          TF_VAR_auth0_domain: ${{ vars.TF_VAR_AUTH0_DOMAIN }}
+          TF_VAR_auth0_audience: ${{ vars.TF_VAR_AUTH0_AUDIENCE }}
+          TF_VAR_auth0_client_id: ${{ vars.TF_VAR_AUTH0_CLIENT_ID }}
+          TF_VAR_mail_username: ${{ vars.TF_VAR_MAIL_USERNAME }}
+        run: terraform destroy -auto-approve
