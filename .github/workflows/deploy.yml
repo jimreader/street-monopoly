@@ -68,6 +68,8 @@ jobs:
           TF_VAR_auth0_audience: ${{ vars.TF_VAR_AUTH0_AUDIENCE }}
           TF_VAR_auth0_client_id: ${{ vars.TF_VAR_AUTH0_CLIENT_ID }}
           TF_VAR_mail_username:  ${{ vars.TF_VAR_MAIL_USERNAME }}
+          TF_VAR_admin_domain:   ${{ vars.TF_VAR_ADMIN_DOMAIN }}
+          TF_VAR_player_domain:  ${{ vars.TF_VAR_PLAYER_DOMAIN }}
         run: |
           terraform init \
             -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \

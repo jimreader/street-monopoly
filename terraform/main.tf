@@ -17,6 +17,12 @@ provider "aws" {
   region = var.aws_region
 }
 
+# CloudFront certificates must live in us-east-1 regardless of deployment region
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
+
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -291,6 +297,37 @@ resource "aws_eip" "backend" {
 }
 
 # ===========================================================================
+# ACM CERTIFICATE — custom domains for CloudFront (must be in us-east-1)
+# Only created when admin_domain / player_domain variables are set.
+# ===========================================================================
+
+resource "aws_acm_certificate" "cdn" {
+  count    = var.admin_domain != "" ? 1 : 0
+  provider = aws.us_east_1
+
+  domain_name               = var.admin_domain
+  subject_alternative_names = [var.player_domain]
+  validation_method         = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Waits until ACM confirms the certificate is issued.
+# terraform apply will pause here until you add the validation CNAME records
+# shown in the acm_dns_validation_records output to your DNS provider.
+resource "aws_acm_certificate_validation" "cdn" {
+  count           = var.admin_domain != "" ? 1 : 0
+  provider        = aws.us_east_1
+  certificate_arn = aws_acm_certificate.cdn[0].arn
+
+  timeouts {
+    create = "45m"
+  }
+}
+
+# ===========================================================================
 # S3 + CLOUDFRONT — static hosting for React apps, API proxied to EC2
 # ===========================================================================
 
@@ -320,6 +357,7 @@ resource "aws_cloudfront_distribution" "admin_app" {
   enabled             = true
   default_root_object = "index.html"
   comment             = "Road Rush Admin"
+  aliases             = var.admin_domain != "" ? [var.admin_domain] : []
 
   origin {
     domain_name              = aws_s3_bucket.admin_app.bucket_regional_domain_name
@@ -392,7 +430,10 @@ resource "aws_cloudfront_distribution" "admin_app" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    cloudfront_default_certificate = var.admin_domain == "" ? true : null
+    acm_certificate_arn            = var.admin_domain != "" ? aws_acm_certificate_validation.cdn[0].certificate_arn : null
+    ssl_support_method             = var.admin_domain != "" ? "sni-only" : null
+    minimum_protocol_version       = var.admin_domain != "" ? "TLSv1.2_2021" : null
   }
 
   tags = { Name = "${var.app_name}-admin-cdn" }
@@ -439,6 +480,7 @@ resource "aws_cloudfront_distribution" "player_app" {
   enabled             = true
   default_root_object = "index.html"
   comment             = "Road Rush Player"
+  aliases             = var.player_domain != "" ? [var.player_domain] : []
 
   origin {
     domain_name              = aws_s3_bucket.player_app.bucket_regional_domain_name
@@ -509,7 +551,10 @@ resource "aws_cloudfront_distribution" "player_app" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    cloudfront_default_certificate = var.admin_domain == "" ? true : null
+    acm_certificate_arn            = var.admin_domain != "" ? aws_acm_certificate_validation.cdn[0].certificate_arn : null
+    ssl_support_method             = var.admin_domain != "" ? "sni-only" : null
+    minimum_protocol_version       = var.admin_domain != "" ? "TLSv1.2_2021" : null
   }
 
   tags = { Name = "${var.app_name}-player-cdn" }

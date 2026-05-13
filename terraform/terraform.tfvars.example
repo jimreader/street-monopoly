@@ -19,3 +19,9 @@ mail_password   = "your-gmail-app-password"
 # Optional: set your public IP to allow direct database access from your machine.
 # Find your IP at https://whatismyipaddress.com — remove this line to keep RDS private.
 # db_allow_local_ip = "203.0.113.42"
+
+# Optional: custom domains for the apps. Leave commented out to use the default CloudFront URLs.
+# After running terraform apply with these set, check the acm_dns_validation_records output
+# and add those CNAMEs to your DNS provider before apply can complete.
+# admin_domain  = "admin.roadrush.jimreader.co.uk"
+# player_domain = "player.roadrush.jimreader.co.uk"

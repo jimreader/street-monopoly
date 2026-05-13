@@ -68,3 +68,15 @@ variable "db_allow_local_ip" {
   type        = string
   default     = ""
 }
+
+variable "admin_domain" {
+  description = "Custom domain for the admin app (e.g. admin.roadrush.jimreader.co.uk). Leave empty to use the default CloudFront domain."
+  type        = string
+  default     = ""
+}
+
+variable "player_domain" {
+  description = "Custom domain for the player app (e.g. player.roadrush.jimreader.co.uk). Leave empty to use the default CloudFront domain."
+  type        = string
+  default     = ""
+}

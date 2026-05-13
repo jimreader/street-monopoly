@@ -1,11 +1,21 @@
 output "admin_app_url" {
   description = "Admin app URL"
-  value       = "https://${aws_cloudfront_distribution.admin_app.domain_name}"
+  value       = var.admin_domain != "" ? "https://${var.admin_domain}" : "https://${aws_cloudfront_distribution.admin_app.domain_name}"
 }
 
 output "player_app_url" {
   description = "Player app URL"
-  value       = "https://${aws_cloudfront_distribution.player_app.domain_name}"
+  value       = var.player_domain != "" ? "https://${var.player_domain}" : "https://${aws_cloudfront_distribution.player_app.domain_name}"
+}
+
+output "acm_dns_validation_records" {
+  description = "Add these CNAME records to your DNS provider to validate the SSL certificate. Only shown when custom domains are configured."
+  value = var.admin_domain != "" ? {
+    for dvo in aws_acm_certificate.cdn[0].domain_validation_options : dvo.domain_name => {
+      record_name  = dvo.resource_record_name
+      record_value = dvo.resource_record_value
+    }
+  } : null
 }
 
 output "api_direct_url" {
