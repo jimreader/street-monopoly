@@ -23,6 +23,11 @@ output "ec2_instance_id" {
   value       = aws_instance.backend.id
 }
 
+output "images_s3_bucket" {
+  description = "S3 bucket for street images"
+  value       = aws_s3_bucket.images.id
+}
+
 output "admin_s3_bucket" {
   description = "S3 bucket for admin app"
   value       = aws_s3_bucket.admin_app.id

@@ -223,6 +223,19 @@ resource "aws_iam_role_policy" "ec2_s3_deploy" {
   })
 }
 
+resource "aws_iam_role_policy" "ec2_s3_images" {
+  name = "${var.app_name}-ec2-s3-images"
+  role = aws_iam_role.ec2.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"]
+      Resource = "${aws_s3_bucket.images.arn}/*"
+    }]
+  })
+}
+
 resource "aws_iam_instance_profile" "ec2" {
   name = "${var.app_name}-ec2-profile"
   role = aws_iam_role.ec2.name
@@ -253,6 +266,8 @@ resource "aws_instance" "backend" {
     mail_password  = var.mail_password
     admin_url      = "*"
     player_url     = "*"
+    images_bucket  = aws_s3_bucket.images.id
+    aws_region     = var.aws_region
   }))
 
   tags = { Name = "${var.app_name}-backend" }
@@ -513,4 +528,18 @@ resource "aws_s3_bucket_policy" "player_app" {
       Condition = { StringEquals = { "AWS:SourceArn" = aws_cloudfront_distribution.player_app.arn } }
     }]
   })
+}
+
+resource "aws_s3_bucket" "images" {
+  bucket_prefix = "${var.app_name}-images-"
+  force_destroy = true
+  tags          = { Name = "${var.app_name}-images" }
+}
+
+resource "aws_s3_bucket_public_access_block" "images" {
+  bucket                  = aws_s3_bucket.images.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
