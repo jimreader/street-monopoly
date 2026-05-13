@@ -258,6 +258,13 @@ resource "aws_instance" "backend" {
   tags = { Name = "${var.app_name}-backend" }
 
   depends_on = [aws_db_instance.postgres]
+
+  lifecycle {
+    # user_data only runs on first boot — changes to it have no effect on a running
+    # instance and would require replacement to take effect anyway.
+    # public_ip/public_dns are controlled by the attached EIP, not the instance.
+    ignore_changes = [user_data, public_ip, public_dns]
+  }
 }
 
 # Elastic IP — gives a stable public IP and DNS independent of the instance lifecycle.
