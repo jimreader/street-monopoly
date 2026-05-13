@@ -159,6 +159,64 @@ jobs:
             --instance-id "$EC2_ID" \
             --region "$REGION" || true
 
+      - name: Wait for backend to start
+        env:
+          EC2_ID: ${{ needs.tf-apply.outputs.ec2_instance_id }}
+          REGION: ${{ vars.AWS_REGION }}
+        run: |
+          # Poll until port 8080 is listening (up to 90s), then dump logs regardless
+          HEALTH_SCRIPT='
+          set -e
+          echo "=== Service status ==="
+          systemctl status streetmonopoly --no-pager || true
+          echo "=== Waiting for port 8080 ==="
+          for i in $(seq 1 18); do
+            if ss -tlnp 2>/dev/null | grep -q ":8080"; then
+              echo "Port 8080 is listening after ${i}x5s"
+              echo "=== Last 50 log lines ==="
+              journalctl -u streetmonopoly --no-pager -n 50
+              exit 0
+            fi
+            echo "  attempt $i/18..."
+            sleep 5
+          done
+          echo "=== Port 8080 never became available. Full logs: ==="
+          journalctl -u streetmonopoly --no-pager -n 100
+          exit 1
+          '
+
+          HEALTH_ID=$(aws ssm send-command \
+            --instance-ids "$EC2_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "{\"commands\":[$(echo "$HEALTH_SCRIPT" | jq -Rs .)]}" \
+            --region "$REGION" \
+            --query "Command.CommandId" --output text)
+
+          aws ssm wait command-executed \
+            --command-id "$HEALTH_ID" \
+            --instance-id "$EC2_ID" \
+            --region "$REGION" || true
+
+          STDOUT=$(aws ssm get-command-invocation \
+            --command-id "$HEALTH_ID" \
+            --instance-id "$EC2_ID" \
+            --region "$REGION" \
+            --query "StandardOutputContent" --output text)
+          STDERR=$(aws ssm get-command-invocation \
+            --command-id "$HEALTH_ID" \
+            --instance-id "$EC2_ID" \
+            --region "$REGION" \
+            --query "StandardErrorContent" --output text)
+          RESULT=$(aws ssm get-command-invocation \
+            --command-id "$HEALTH_ID" \
+            --instance-id "$EC2_ID" \
+            --region "$REGION" \
+            --query "Status" --output text)
+
+          echo "$STDOUT"
+          echo "$STDERR"
+          [ "$RESULT" = "Success" ] || exit 1
+
       - name: Remove deploy artifact from S3
         if: always()
         run: |
