@@ -116,11 +116,13 @@ export function GameScreen() {
   useEffect(() => {
     if (!game || game.status !== 'pending') return;
     const target = new Date(game.startTime).getTime();
+    let intervalId;
 
     function update() {
       const now = Date.now();
       const diff = target - now;
       if (diff <= 0) {
+        clearInterval(intervalId);
         setCountdown('Starting...');
         loadGame();
         return;
@@ -135,9 +137,9 @@ export function GameScreen() {
     }
 
     update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
-  }, [game?.status, game?.startTime]);
+    intervalId = setInterval(update, 1000);
+    return () => clearInterval(intervalId);
+  }, [game?.status, game?.startTime, loadGame]);
 
   function showToast(message, type = 'info') {
     setToast({ message, type });
