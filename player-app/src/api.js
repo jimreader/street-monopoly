@@ -7,7 +7,7 @@ const API_BASE = '/api/player';
  */
 function getDeviceToken() {
   const STORAGE_KEY = 'road-rush-device-token';
-  let token = sessionStorage.getItem(STORAGE_KEY);
+  let token = localStorage.getItem(STORAGE_KEY);
   if (!token) {
     token = crypto.randomUUID ? crypto.randomUUID() : (
       'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -15,7 +15,7 @@ function getDeviceToken() {
         return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
       })
     );
-    sessionStorage.setItem(STORAGE_KEY, token);
+    localStorage.setItem(STORAGE_KEY, token);
   }
   return token;
 }
