@@ -53,6 +53,16 @@ output "rds_endpoint" {
   value       = aws_db_instance.postgres.endpoint
 }
 
+output "db_name" {
+  description = "Database name"
+  value       = aws_db_instance.postgres.db_name
+}
+
+output "db_username" {
+  description = "Database username"
+  value       = var.db_username
+}
+
 output "db_connection_info" {
   description = "Database connection details (shown only when local access is enabled)"
   value = var.db_allow_local_ip == "" ? "Local database access is disabled. Set db_allow_local_ip in terraform.tfvars to enable." :  <<-EOT

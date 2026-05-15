@@ -8,7 +8,8 @@ echo "=== Road Rush EC2 setup starting ==="
 # Install Java 21
 dnf install -y java-21-amazon-corretto-headless
 
-# Create app user
+# Create app user and directory
+mkdir -p /opt/streetmonopoly
 useradd -r -s /bin/false streetmonopoly || true
 chown -R streetmonopoly:streetmonopoly /opt/streetmonopoly
 

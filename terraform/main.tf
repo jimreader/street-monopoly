@@ -278,7 +278,7 @@ resource "aws_instance" "backend" {
     # user_data only runs on first boot — changes to it have no effect on a running
     # instance and would require replacement to take effect anyway.
     # public_ip/public_dns are controlled by the attached EIP, not the instance.
-    ignore_changes = [user_data, public_ip, public_dns]
+    ignore_changes = [user_data, ami, public_ip, public_dns]
   }
 }
 
