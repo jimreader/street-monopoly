@@ -294,6 +294,7 @@ export function GameDetailPage() {
                       <th>Email</th>
                       <th>Balance</th>
                       <th>Last seen</th>
+                      {(view.status === 'pending' || view.status === 'active') && <th></th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -325,6 +326,22 @@ export function GameDetailPage() {
                               <span style={{ color: 'var(--text-dim)' }}>Not checked in</span>
                             )}
                           </td>
+                          {(view.status === 'pending' || view.status === 'active') && (
+                            <td>
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                title="Clear the bound device so the player can rejoin from any device"
+                                onClick={async () => {
+                                  try {
+                                    await api.resetPlayerDevice(id, gp.id);
+                                    setSuccess(`Device reset for ${gp.player?.name || 'player'}`);
+                                  } catch (e) { setError(e.message); }
+                                }}
+                              >
+                                Reset device
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       );
                     })}

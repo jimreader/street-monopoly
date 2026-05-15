@@ -424,6 +424,12 @@ public class GameService {
         return gamePlayerMapper.findByGameId(gameId);
     }
 
+    public void resetPlayerDevice(UUID gameId, UUID gamePlayerId) {
+        GamePlayer gp = gamePlayerMapper.findByGameAndId(gameId, gamePlayerId);
+        if (gp == null) throw new RuntimeException("Player not found in this game");
+        gamePlayerMapper.clearDeviceToken(gamePlayerId);
+    }
+
     /**
      * Bind a player to a single device. On the first request that includes a device token,
      * the token is stored. Subsequent requests from a different device are rejected.

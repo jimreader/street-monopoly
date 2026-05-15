@@ -49,4 +49,12 @@ public class GameController {
     public AdminGameView getAdminView(@PathVariable UUID gameId) {
         return gameService.getAdminView(gameId);
     }
+
+    @PostMapping("/{gameId}/players/{gamePlayerId}/reset-device")
+    public ResponseEntity<Void> resetPlayerDevice(
+            @PathVariable UUID gameId,
+            @PathVariable UUID gamePlayerId) {
+        gameService.resetPlayerDevice(gameId, gamePlayerId);
+        return ResponseEntity.noContent().build();
+    }
 }

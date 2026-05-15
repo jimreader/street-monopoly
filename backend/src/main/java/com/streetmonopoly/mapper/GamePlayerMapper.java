@@ -36,6 +36,9 @@ public interface GamePlayerMapper {
     @Select("SELECT * FROM game_player WHERE game_id = #{gameId} AND player_id = #{playerId}")
     GamePlayer findByGameAndPlayer(@Param("gameId") UUID gameId, @Param("playerId") UUID playerId);
 
+    @Select("SELECT * FROM game_player WHERE game_id = #{gameId} AND id = #{id}")
+    GamePlayer findByGameAndId(@Param("gameId") UUID gameId, @Param("id") UUID id);
+
     @Insert("INSERT INTO game_player (id, game_id, player_id, balance, invite_token, join_token) " +
             "VALUES (#{id}, #{gameId}, #{playerId}, #{balance}, #{inviteToken}, #{joinToken})")
     void insert(GamePlayer gamePlayer);
@@ -51,6 +54,9 @@ public interface GamePlayerMapper {
 
     @Update("UPDATE game_player SET device_token = #{deviceToken} WHERE id = #{id}")
     void updateDeviceToken(@Param("id") UUID id, @Param("deviceToken") String deviceToken);
+
+    @Update("UPDATE game_player SET device_token = NULL WHERE id = #{id}")
+    void clearDeviceToken(UUID id);
 
     @Select("SELECT gp.* FROM game_player gp WHERE gp.game_id = #{gameId}")
     List<GamePlayer> findAllByGameId(UUID gameId);
