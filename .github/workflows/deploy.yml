@@ -121,6 +121,27 @@ jobs:
             "s3://${{ needs.tf-apply.outputs.admin_bucket }}/deploy/app.jar" \
             --region "${{ vars.AWS_REGION }}"
 
+      - name: Wait for EC2 to be SSM-reachable
+        env:
+          EC2_ID: ${{ needs.tf-apply.outputs.ec2_instance_id }}
+          REGION: ${{ vars.AWS_REGION }}
+        run: |
+          echo "Waiting for SSM agent on $EC2_ID..."
+          for i in $(seq 1 24); do
+            COUNT=$(aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=$EC2_ID" \
+              --region "$REGION" \
+              --query "length(InstanceInformationList)" \
+              --output text 2>/dev/null || echo 0)
+            if [ "$COUNT" -ge 1 ]; then
+              echo "SSM agent ready after $((i * 10))s"
+              break
+            fi
+            [ "$i" -eq 24 ] && echo "Timed out waiting for SSM" && exit 1
+            echo "  not ready yet ($i/24)..."
+            sleep 10
+          done
+
       - name: Deploy to EC2 via SSM
         env:
           EC2_ID:         ${{ needs.tf-apply.outputs.ec2_instance_id }}
