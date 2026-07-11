@@ -308,7 +308,7 @@ export function GameScreen() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 10, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>
           <span>🏠 {ownedCount} owned</span>
           <span>👣 {visitedCount}/{game.streets.length} visited</span>
           <span style={{ marginLeft: 'auto' }}>
