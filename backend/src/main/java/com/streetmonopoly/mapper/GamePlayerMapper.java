@@ -64,6 +64,9 @@ public interface GamePlayerMapper {
     @Select("SELECT gp.* FROM game_player gp WHERE gp.game_id = #{gameId} AND gp.deleted_at IS NULL")
     List<GamePlayer> findAllByGameId(UUID gameId);
 
+        @Select("SELECT COUNT(*) > 0 FROM game_player gp JOIN player p ON gp.player_id = p.id WHERE gp.game_id = #{gameId} AND gp.deleted_at IS NULL AND LOWER(p.email) = LOWER(#{email})")
+        boolean existsActiveByGameAndEmail(@Param("gameId") UUID gameId, @Param("email") String email);
+
     @Update("UPDATE game_player SET deleted_at = NOW(), device_token = NULL WHERE game_id = #{gameId} AND id = #{id} AND deleted_at IS NULL")
     int softDelete(@Param("gameId") UUID gameId, @Param("id") UUID id);
 

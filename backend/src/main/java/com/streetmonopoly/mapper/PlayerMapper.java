@@ -11,7 +11,7 @@ public interface PlayerMapper {
     @Select("SELECT * FROM player WHERE id = #{id}")
     Player findById(UUID id);
 
-    @Select("SELECT * FROM player WHERE email = #{email}")
+    @Select("SELECT * FROM player WHERE LOWER(email) = LOWER(#{email}) LIMIT 1")
     Player findByEmail(String email);
 
     @Insert("INSERT INTO player (id, name, email) VALUES (#{id}, #{name}, #{email})")

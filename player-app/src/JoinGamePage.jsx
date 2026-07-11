@@ -44,47 +44,52 @@ export function JoinGamePage() {
   }
 
   return (
-    <div className="center-screen">
-      <img
-        src="/logo.svg"
-        alt="Road Rush"
-        style={{ height: 44, marginBottom: 20, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.15))' }}
-      />
-      <h1 className="hero-title" style={{ fontSize: 34 }}>Join This Game</h1>
+    <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
+      <div className="app-brand-band">
+        <img
+          src="/logo.svg"
+          alt="Road Rush"
+          style={{ height: 42, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' }}
+        />
+      </div>
 
-      <div className="join-warning-card" style={{ marginBottom: 14, width: '100%', maxWidth: 420 }}>
-        {error ? (
-          <p className="hero-sub" style={{ color: 'var(--danger)', maxWidth: 360 }}>
-            {error}
-          </p>
-        ) : !summary ? (
-          <p className="hero-sub" style={{ maxWidth: 360 }}>
-            Loading game details...
-          </p>
-        ) : (
-          <>
-            <p className="hero-sub" style={{ maxWidth: 360, marginBottom: 8 }}>
-              <strong>{summary.gameName}</strong>
+      <div className="center-screen" style={{ minHeight: 'calc(100dvh - 66px)', justifyContent: 'flex-start', paddingTop: 28 }}>
+        <h1 className="hero-title" style={{ fontSize: 34 }}>Join This Game</h1>
+
+        <div className="join-warning-card" style={{ marginBottom: 14, width: '100%', maxWidth: 420 }}>
+          {error ? (
+            <p className="hero-sub" style={{ color: 'var(--danger)', maxWidth: 360 }}>
+              {error}
             </p>
-            <p className="hero-sub" style={{ maxWidth: 360, marginBottom: 4 }}>
-              Start: {formatDateTime(summary.startTime)}
-            </p>
+          ) : !summary ? (
             <p className="hero-sub" style={{ maxWidth: 360 }}>
-              End: {formatDateTime(summary.endTime)}
+              Loading game details...
             </p>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <p className="hero-sub" style={{ maxWidth: 360, marginBottom: 8 }}>
+                <strong>{summary.gameName}</strong>
+              </p>
+              <p className="hero-sub" style={{ maxWidth: 360, marginBottom: 4 }}>
+                Start: {formatDateTime(summary.startTime)}
+              </p>
+              <p className="hero-sub" style={{ maxWidth: 360 }}>
+                End: {formatDateTime(summary.endTime)}
+              </p>
+            </>
+          )}
+        </div>
 
-      <div className="join-warning-card">
-        <p className="hero-sub" style={{ maxWidth: 360 }}>
-          You can only join once. When you are ready, tap the button below to join this game on this device.
-        </p>
-        <p className="hero-sub" style={{ maxWidth: 360 }}>
-          Keep this same browser page open while you play. Opening the link in another device or browser may stop access.
-        </p>
+        <div className="join-warning-card">
+          <p className="hero-sub" style={{ maxWidth: 360 }}>
+            You can only join once. When you are ready, tap the button below to join this game on this device.
+          </p>
+          <p className="hero-sub" style={{ maxWidth: 360 }}>
+            Keep this same browser page open while you play. Opening the link in another device or browser may stop access.
+          </p>
+        </div>
+        <button className="join-confirm-btn" onClick={handleJoinClick}>Join Game Now</button>
       </div>
-      <button className="join-confirm-btn" onClick={handleJoinClick}>Join Game Now</button>
     </div>
   );
 }

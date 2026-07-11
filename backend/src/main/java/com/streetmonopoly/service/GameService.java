@@ -65,18 +65,27 @@ public class GameService {
     @Transactional
     public GamePlayer invitePlayer(UUID gameId, InvitePlayerRequest request) {
         Game game = getGame(gameId);
+        String normalizedEmail = request.getEmail() == null ? null : request.getEmail().trim();
 
         if (!"pending".equals(game.getStatus()) && !"active".equals(game.getStatus())) {
             throw new RuntimeException("Players can only be invited to pending or active games");
         }
 
+        if (normalizedEmail == null || normalizedEmail.isBlank()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        if (gamePlayerMapper.existsActiveByGameAndEmail(gameId, normalizedEmail)) {
+            throw new RuntimeException("A player with this email is already invited to this game");
+        }
+
         // Find or create player
-        Player player = playerMapper.findByEmail(request.getEmail());
+        Player player = playerMapper.findByEmail(normalizedEmail);
         if (player == null) {
             player = new Player();
             player.setId(UUID.randomUUID());
             player.setName(request.getName());
-            player.setEmail(request.getEmail());
+            player.setEmail(normalizedEmail);
             playerMapper.insert(player);
         } else {
             player.setName(request.getName());

@@ -71,6 +71,7 @@ export function GameScreen() {
   const [checkingIn, setCheckingIn] = useState(null);
   const [toast, setToast] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [expandedStreetId, setExpandedStreetId] = useState(null);
   const [countdown, setCountdown] = useState('');
   const watchRef = useRef(null);
   const toastTimer = useRef(null);
@@ -122,7 +123,6 @@ export function GameScreen() {
       const now = Date.now();
       const diff = target - now;
       if (diff <= 0) {
-        clearInterval(intervalId);
         setCountdown('Starting...');
         loadGame();
         return;
@@ -188,19 +188,37 @@ export function GameScreen() {
 
   if (error) {
     return (
-      <div className="center-screen">
-        <div className="hero-icon">😵</div>
-        <h1 className="hero-title">Oops</h1>
-        <p className="hero-sub">{error}</p>
+      <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
+        <div className="app-brand-band">
+          <img
+            src="/logo.svg"
+            alt="Road Rush"
+            style={{ height: 42, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' }}
+          />
+        </div>
+        <div className="center-screen" style={{ minHeight: 'calc(100dvh - 66px)' }}>
+          <div className="hero-icon">😵</div>
+          <h1 className="hero-title">Oops</h1>
+          <p className="hero-sub">{error}</p>
+        </div>
       </div>
     );
   }
 
   if (!game) {
     return (
-      <div className="center-screen">
-        <img src="/logo.svg" alt="Road Rush" style={{ height: 36, animation: 'pulse 2s infinite' }} />
-        <p className="hero-sub">Loading game...</p>
+      <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
+        <div className="app-brand-band">
+          <img
+            src="/logo.svg"
+            alt="Road Rush"
+            style={{ height: 42, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' }}
+          />
+        </div>
+        <div className="center-screen" style={{ minHeight: 'calc(100dvh - 66px)' }}>
+          <img src="/logo.svg" alt="Road Rush" style={{ height: 36, animation: 'pulse 2s infinite' }} />
+          <p className="hero-sub">Loading game...</p>
+        </div>
       </div>
     );
   }
@@ -208,19 +226,28 @@ export function GameScreen() {
   // PENDING — show countdown
   if (game.status === 'pending') {
     return (
-      <div className="countdown-screen">
-        <div style={{ fontSize: 64, marginBottom: 24 }}>⏳</div>
-        <p className="countdown-label">Game starts in</p>
-        <div className="countdown-timer">{countdown}</div>
-        <p className="countdown-date">
-          {new Date(game.startTime).toLocaleString('en-GB', {
-            weekday: 'long', day: 'numeric', month: 'long',
-            hour: '2-digit', minute: '2-digit'
-          })}
-        </p>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, marginTop: 32 }}>
-          {game.gameName}
-        </h2>
+      <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
+        <div className="app-brand-band">
+          <img
+            src="/logo.svg"
+            alt="Road Rush"
+            style={{ height: 42, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' }}
+          />
+        </div>
+        <div className="countdown-screen" style={{ minHeight: 'calc(100dvh - 66px)' }}>
+          <div style={{ fontSize: 64, marginBottom: 24 }}>⏳</div>
+          <p className="countdown-label">Game starts in</p>
+          <div className="countdown-timer">{countdown}</div>
+          <p className="countdown-date">
+            {new Date(game.startTime).toLocaleString('en-GB', {
+              weekday: 'long', day: 'numeric', month: 'long',
+              hour: '2-digit', minute: '2-digit'
+            })}
+          </p>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, marginTop: 32 }}>
+            {game.gameName}
+          </h2>
+        </div>
       </div>
     );
   }
@@ -229,22 +256,29 @@ export function GameScreen() {
   if (game.status === 'completed') {
     const owned = game.streets.filter(s => s.ownedByPlayer).length;
     const visited = game.streets.filter(s => s.visitStatus !== 'unvisited').length;
-    const finalBal = game.finalBalance != null ? parseFloat(game.finalBalance) : parseFloat(game.balance);
-    const totalRent = (game.rentCollections || []).reduce((s, r) => s + parseFloat(r.amount), 0);
+    const notVisited = game.streets.length - visited;
+    const rentCollectedCount = (game.rentCollections || []).length;
+    const rentPaidCount = game.streets.filter(s => s.visitStatus === 'visited_rent_paid').length;
 
     return (
       <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
+        <div className="app-brand-band">
+          <img
+            src="/logo.svg"
+            alt="Road Rush"
+            style={{ height: 42, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' }}
+          />
+        </div>
         <div className="game-over-screen" style={{ minHeight: 'auto', paddingBottom: 20 }}>
           <div className="game-over-icon">🏁</div>
           <h1 className="game-over-title">Game Over</h1>
           <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>{game.gameName}</p>
 
-          <p className="final-balance-label">Your Final Balance</p>
-          <div className={`final-balance-value ${finalBal >= 0 ? 'balance-positive' : 'balance-negative'}`}>
-            £{finalBal.toFixed(0)}
-          </div>
+          <p className="final-note" style={{ marginBottom: 20, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>
+            Please return to Game HQ for the final results announcement.
+          </p>
 
-          <div style={{ display: 'flex', gap: 24, marginBottom: 24 }}>
+          <div style={{ display: 'flex', gap: 24, marginBottom: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-green)' }}>{owned}</div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Streets owned</div>
@@ -254,8 +288,16 @@ export function GameScreen() {
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Streets visited</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-green)' }}>£{totalRent.toFixed(0)}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Rent earned</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-muted)' }}>{notVisited}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Streets not visited</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-green)' }}>{rentCollectedCount}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Times rent was collected</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-red)' }}>{rentPaidCount}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Times rent was paid</div>
             </div>
           </div>
 
@@ -292,7 +334,10 @@ export function GameScreen() {
       <div className="player-header">
         <div className="player-header-top">
           <div>
-            <div className="game-name">{game.gameName}</div>
+            <div className="game-title-row">
+              <img src="/logo.svg" alt="Road Rush" className="header-logo" />
+              <div className="game-name">{game.gameName}</div>
+            </div>
             <div className="gps-status">
               <span className={`gps-dot ${gpsPos && !gpsError ? 'active' : 'inactive'}`} />
               {gpsPos && !gpsError
@@ -333,49 +378,65 @@ export function GameScreen() {
         <div className="street-grid">
           {filteredStreets.map(street => {
             const near = isNearStreet(street);
-            const canCheckIn = near && street.visitStatus === 'unvisited' && !street.ownedByPlayer;
             const isLoading = checkingIn === street.streetId;
             const statusLabel = STATUS_LABELS[street.visitStatus] || street.visitStatus;
             const badgeClass = STATUS_BADGE_CLASS[street.visitStatus] || 'badge-unvisited';
+            const isExpanded = expandedStreetId === street.streetId;
 
             return (
               <div key={street.streetId}
                 className={`street-card ${street.ownedByPlayer ? 'owned' : ''} ${street.visitStatus !== 'unvisited' && !street.ownedByPlayer ? 'visited' : ''}`}>
                 <div className="street-colour-bar" style={{ backgroundColor: `var(--${street.colour})` }} />
                 <div className="street-card-body">
-                  <div className="street-card-top">
+                  <button
+                    type="button"
+                    className="street-summary-btn"
+                    onClick={() => setExpandedStreetId(prev => prev === street.streetId ? null : street.streetId)}
+                  >
                     <div>
                       <div className="street-name">{street.name}</div>
                       <div className="street-prices">
-                        <span>Buy: £{parseFloat(street.price).toFixed(0)}</span>
-                        <span>Rent: £{parseFloat(street.rentalPrice).toFixed(0)}</span>
+                        <span>Price: £{parseFloat(street.price).toFixed(0)}</span>
                       </div>
                     </div>
                     <span className={`street-status-badge ${badgeClass}`}>
                       {statusLabel}
                     </span>
-                  </div>
+                  </button>
 
-                  {street.imageClueUrl && street.visitStatus === 'unvisited' && (
-                    <img src={street.imageClueUrl} alt="Location clue" className="street-clue-img"
-                      onError={(e) => e.target.style.display = 'none'} />
-                  )}
-
-                  {street.visitStatus === 'unvisited' && !street.ownedByPlayer && (
+                  {isExpanded && (
                     <>
-                      {near && gpsPos ? (
-                        <button className={`checkin-btn ${isLoading ? 'loading' : ''}`}
-                          onClick={() => handleCheckIn(street)} disabled={isLoading}>
-                          {isLoading ? '⏳ Checking in...' : '📍 Check In'}
-                        </button>
-                      ) : (
-                        gpsPos && (
-                          <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-dim)', textAlign: 'center' }}>
-                            Move closer to this street to unlock check in.
-                          </div>
-                        )
+                      <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>
+                        Rent: £{parseFloat(street.rentalPrice).toFixed(0)}
+                      </div>
+
+                      {street.imageClueUrl && street.visitStatus === 'unvisited' && (
+                        <img src={street.imageClueUrl} alt="Location clue" className="street-clue-img"
+                          onError={(e) => e.target.style.display = 'none'} />
+                      )}
+
+                      {street.visitStatus === 'unvisited' && !street.ownedByPlayer && (
+                        <>
+                          {near && gpsPos ? (
+                            <button className={`checkin-btn ${isLoading ? 'loading' : ''}`}
+                              onClick={() => handleCheckIn(street)} disabled={isLoading}>
+                              {isLoading ? '⏳ Checking in...' : '📍 Check In'}
+                            </button>
+                          ) : (
+                            gpsPos && (
+                              <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-dim)', textAlign: 'center' }}>
+                                Move closer to this street to unlock check in.
+                              </div>
+                            )
+                          )}
+                        </>
                       )}
                     </>
+                  )}
+                  {!isExpanded && (
+                    <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-dim)' }}>
+                      Tap to view details
+                    </div>
                   )}
                 </div>
               </div>
