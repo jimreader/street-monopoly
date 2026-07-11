@@ -368,23 +368,23 @@ export function GameScreen() {
     <div>
       <div className="player-header">
         <div className="player-header-top">
-          <div>
-            <div className="game-title-row">
-              <img src="/logo.svg" alt="Road Rush" className="header-logo" />
-              <div className="game-name">{game.gameName}</div>
-            </div>
-            <div className="gps-status">
-              <span className={`gps-dot ${gpsPos && !gpsError ? 'active' : 'inactive'}`} />
-              {gpsPos && !gpsError
-                ? `GPS active (±${Math.round(gpsPos.accuracy)}m)`
-                : 'GPS unavailable'}
+          <div className="player-header-meta-row">
+            <img src="/logo.svg" alt="Road Rush" className="header-logo" />
+            <div className="balance-display">
+              <div className="balance-label">Balance</div>
+              <div className={`balance-value ${balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
+                £{balance.toFixed(0)}
+              </div>
             </div>
           </div>
-          <div className="balance-display">
-            <div className="balance-label">Balance</div>
-            <div className={`balance-value ${balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
-              £{balance.toFixed(0)}
-            </div>
+
+          <div className="game-name game-name-full">{game.gameName}</div>
+
+          <div className="gps-status">
+            <span className={`gps-dot ${gpsPos && !gpsError ? 'active' : 'inactive'}`} />
+            {gpsPos && !gpsError
+              ? `GPS active (±${Math.round(gpsPos.accuracy)}m)`
+              : 'GPS unavailable'}
           </div>
         </div>
 
