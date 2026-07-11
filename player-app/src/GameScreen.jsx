@@ -73,6 +73,7 @@ export function GameScreen() {
   const [filter, setFilter] = useState('all');
   const [expandedStreetId, setExpandedStreetId] = useState(null);
   const [countdown, setCountdown] = useState('');
+  const [endCountdown, setEndCountdown] = useState('');
   const watchRef = useRef(null);
   const toastTimer = useRef(null);
 
@@ -140,6 +141,40 @@ export function GameScreen() {
     intervalId = setInterval(update, 1000);
     return () => clearInterval(intervalId);
   }, [game?.status, game?.startTime, loadGame]);
+
+  // Active game end countdown timer
+  useEffect(() => {
+    if (!game || game.status !== 'active') {
+      setEndCountdown('');
+      return;
+    }
+
+    const target = new Date(game.endTime).getTime();
+    let intervalId;
+
+    function updateEndCountdown() {
+      const now = Date.now();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        setEndCountdown('Ending...');
+        return;
+      }
+
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+
+      if (d > 0) setEndCountdown(`${d}d ${h}h ${m}m ${s}s`);
+      else if (h > 0) setEndCountdown(`${h}h ${m}m ${s}s`);
+      else setEndCountdown(`${m}m ${s}s`);
+    }
+
+    updateEndCountdown();
+    intervalId = setInterval(updateEndCountdown, 1000);
+    return () => clearInterval(intervalId);
+  }, [game?.status, game?.endTime]);
 
   function showToast(message, type = 'info') {
     setToast({ message, type });
@@ -357,7 +392,7 @@ export function GameScreen() {
           <span>🏠 {ownedCount} owned</span>
           <span>👣 {visitedCount}/{game.streets.length} visited</span>
           <span style={{ marginLeft: 'auto' }}>
-            Ends {new Date(game.endTime).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+            Ends in {endCountdown || '—'}
           </span>
         </div>
       </div>
