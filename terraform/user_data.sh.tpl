@@ -7,11 +7,16 @@ echo "=== Road Rush EC2 setup starting ==="
 
 # Install Java 21
 dnf install -y java-21-amazon-corretto-headless
+# Install CloudWatch agent for centralized logs
+dnf install -y amazon-cloudwatch-agent
 
 # Create app user and directory
 mkdir -p /opt/streetmonopoly
 useradd -r -s /bin/false streetmonopoly || true
 chown -R streetmonopoly:streetmonopoly /opt/streetmonopoly
+mkdir -p /var/log/streetmonopoly
+touch /var/log/streetmonopoly/app.log
+chown -R streetmonopoly:streetmonopoly /var/log/streetmonopoly
 
 # Write environment file
 cat > /opt/streetmonopoly/app.env << 'ENVEOF'
@@ -48,8 +53,8 @@ EnvironmentFile=/opt/streetmonopoly/app.env
 ExecStart=/usr/bin/java -jar /opt/streetmonopoly/app.jar
 Restart=always
 RestartSec=10
-StandardOutput=journal
-StandardError=journal
+StandardOutput=append:/var/log/streetmonopoly/app.log
+StandardError=append:/var/log/streetmonopoly/app.log
 
 [Install]
 WantedBy=multi-user.target
@@ -57,5 +62,34 @@ SVCEOF
 
 systemctl daemon-reload
 systemctl enable streetmonopoly
+
+# Configure CloudWatch log shipping
+mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << 'CWEOF'
+{
+	"logs": {
+		"logs_collected": {
+			"files": {
+				"collect_list": [
+					{
+						"file_path": "/var/log/streetmonopoly/app.log",
+						"log_group_name": "/${app_name}/api",
+						"log_stream_name": "{instance_id}",
+						"retention_in_days": 14
+					},
+					{
+						"file_path": "/var/log/user-data.log",
+						"log_group_name": "/${app_name}/bootstrap",
+						"log_stream_name": "{instance_id}",
+						"retention_in_days": 7
+					}
+				]
+			}
+		}
+	}
+}
+CWEOF
+
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
 
 echo "=== Setup complete. Upload app.jar to /opt/streetmonopoly/ and run: sudo systemctl start streetmonopoly ==="

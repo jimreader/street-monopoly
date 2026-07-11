@@ -210,6 +210,11 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+resource "aws_iam_role_policy_attachment" "ec2_cloudwatch_agent" {
+  role       = aws_iam_role.ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
 # Allow EC2 to download the JAR from S3 during deployment
 resource "aws_iam_role_policy" "ec2_s3_deploy" {
   name = "${var.app_name}-ec2-s3-deploy"
@@ -257,6 +262,7 @@ resource "aws_instance" "backend" {
   # Note: CORS origins use a wildcard initially. The deploy script updates
   # the env file with the actual CloudFront domains after first deployment.
   user_data = base64encode(templatefile("${path.module}/user_data.sh.tpl", {
+    app_name       = var.app_name
     db_endpoint    = aws_db_instance.postgres.endpoint
     db_name        = aws_db_instance.postgres.db_name
     db_username    = var.db_username

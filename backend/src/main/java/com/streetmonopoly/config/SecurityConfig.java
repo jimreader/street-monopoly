@@ -38,6 +38,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Allow health probes without auth
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 // Player-facing endpoints are public (secured by join token in the URL)
                 .requestMatchers("/api/player/**").permitAll()
                 // Serve uploaded images publicly (player app needs them)
