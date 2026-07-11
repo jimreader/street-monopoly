@@ -57,4 +57,18 @@ public class GameController {
         gameService.resetPlayerDevice(gameId, gamePlayerId);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{gameId}/players/{gamePlayerId}")
+    public ResponseEntity<Void> removePlayer(
+            @PathVariable UUID gameId,
+            @PathVariable UUID gamePlayerId) {
+        gameService.removePlayer(gameId, gamePlayerId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{gameId}")
+    public ResponseEntity<Void> deleteGame(@PathVariable UUID gameId) {
+        gameService.deleteGame(gameId);
+        return ResponseEntity.noContent().build();
+    }
 }

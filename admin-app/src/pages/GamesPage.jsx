@@ -5,6 +5,7 @@ import { api } from '../api.js';
 export function GamesPage() {
   const [games, setGames] = useState([]);
   const [error, setError] = useState('');
+  const [deletingGameId, setDeletingGameId] = useState(null);
 
   useEffect(() => {
     api.getGames().then(setGames).catch(e => setError(e.message));
@@ -22,10 +23,35 @@ export function GamesPage() {
   const active = games.filter(g => g.status === 'active');
   const completed = games.filter(g => g.status === 'completed');
 
+  async function handleDeleteGame(game) {
+    const canDelete = game.status === 'pending' || game.status === 'completed';
+    if (!canDelete) {
+      setError('Only pending or completed games can be deleted.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete game "${game.name}"? This is a soft delete and can hide game data from admin/player views.`);
+    if (!confirmed) return;
+
+    setError('');
+    setDeletingGameId(game.id);
+    try {
+      await api.deleteGame(game.id);
+      setGames(prev => prev.filter(g => g.id !== game.id));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setDeletingGameId(null);
+    }
+  }
+
   function GameCard({ game }) {
+    const canDelete = game.status === 'pending' || game.status === 'completed';
+    const isDeleting = deletingGameId === game.id;
+
     return (
-      <Link to={`/games/${game.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-        <div className="card">
+      <div className="card">
+        <Link to={`/games/${game.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <h3 className="card-title">{game.name}</h3>
             <span className={`badge badge-${game.status}`}>{game.status}</span>
@@ -35,8 +61,20 @@ export function GamesPage() {
             <span>💰 £{parseFloat(game.startingBalance).toFixed(0)}</span>
             <span>📍 {game.proximityMetres}m</span>
           </div>
-        </div>
-      </Link>
+        </Link>
+
+        {canDelete && (
+          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => handleDeleteGame(game)}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Game'}
+            </button>
+          </div>
+        )}
+      </div>
     );
   }
 

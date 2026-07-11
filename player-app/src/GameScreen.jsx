@@ -371,8 +371,7 @@ export function GameScreen() {
                       ) : (
                         gpsPos && (
                           <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-dim)', textAlign: 'center' }}>
-                            📍 {Math.round(calculateDistance(gpsPos.lat, gpsPos.lng, street.latitude, street.longitude))}m away
-                            — need to be within {game.proximityMetres}m
+                            Move closer to this street to unlock check in.
                           </div>
                         )
                       )}

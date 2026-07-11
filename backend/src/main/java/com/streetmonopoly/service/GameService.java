@@ -66,6 +66,10 @@ public class GameService {
     public GamePlayer invitePlayer(UUID gameId, InvitePlayerRequest request) {
         Game game = getGame(gameId);
 
+        if (!"pending".equals(game.getStatus()) && !"active".equals(game.getStatus())) {
+            throw new RuntimeException("Players can only be invited to pending or active games");
+        }
+
         // Find or create player
         Player player = playerMapper.findByEmail(request.getEmail());
         if (player == null) {
@@ -83,6 +87,19 @@ public class GameService {
         GamePlayer existing = gamePlayerMapper.findByGameAndPlayer(gameId, player.getId());
         if (existing != null) {
             throw new RuntimeException("Player already invited to this game");
+        }
+
+        // If previously removed, restore the existing record instead of inserting a duplicate.
+        GamePlayer deletedLink = gamePlayerMapper.findByGameAndPlayerIncludingDeleted(gameId, player.getId());
+        if (deletedLink != null) {
+            UUID inviteToken = UUID.randomUUID();
+            UUID joinToken = UUID.randomUUID();
+            gamePlayerMapper.restorePlayer(deletedLink.getId(), game.getStartingBalance(), inviteToken, joinToken);
+            emailService.sendJoinEmail(player.getEmail(), player.getName(), game.getName(), joinToken);
+
+            GamePlayer restored = gamePlayerMapper.findByGameAndId(gameId, deletedLink.getId());
+            restored.setPlayer(player);
+            return restored;
         }
 
         // Create the game-player link — immediately joined, no acceptance step
@@ -428,6 +445,37 @@ public class GameService {
         GamePlayer gp = gamePlayerMapper.findByGameAndId(gameId, gamePlayerId);
         if (gp == null) throw new RuntimeException("Player not found in this game");
         gamePlayerMapper.clearDeviceToken(gamePlayerId);
+    }
+
+    @Transactional
+    public void removePlayer(UUID gameId, UUID gamePlayerId) {
+        Game game = getGame(gameId);
+        if ("completed".equals(game.getStatus())) {
+            throw new RuntimeException("Cannot remove players from a completed game");
+        }
+
+        GamePlayer gp = gamePlayerMapper.findByGameAndId(gameId, gamePlayerId);
+        if (gp == null) throw new RuntimeException("Player not found in this game");
+
+        gameStreetMapper.clearOwnerByGameAndPlayer(gameId, gp.getPlayerId());
+        int updated = gamePlayerMapper.softDelete(gameId, gamePlayerId);
+        if (updated == 0) {
+            throw new RuntimeException("Player not found in this game");
+        }
+    }
+
+    @Transactional
+    public void deleteGame(UUID gameId) {
+        Game game = getGame(gameId);
+        if ("active".equals(game.getStatus())) {
+            throw new RuntimeException("Cannot delete a game while it is in progress");
+        }
+
+        gamePlayerMapper.softDeleteByGameId(gameId);
+        int updated = gameMapper.softDelete(gameId);
+        if (updated == 0) {
+            throw new RuntimeException("Game not found: " + gameId);
+        }
     }
 
     /**

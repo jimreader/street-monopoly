@@ -90,6 +90,8 @@ export function GameDetailPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const [deletingGame, setDeletingGame] = useState(false);
+  const [deletingPlayerId, setDeletingPlayerId] = useState(null);
   useEffect(() => { loadData(); }, [id]);
 
   useEffect(() => {
@@ -124,6 +126,47 @@ export function GameDetailPage() {
     } catch (e) { setError(e.message); }
   }
 
+  async function handleDeleteGame() {
+    if (!(view.status === 'pending' || view.status === 'completed')) {
+      setError('Only pending or completed games can be deleted.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete game "${view.gameName}"? This is a soft delete and cannot be accessed in normal views.`);
+    if (!confirmed) return;
+
+    setError('');
+    setSuccess('');
+    setDeletingGame(true);
+    try {
+      await api.deleteGame(id);
+      window.location.href = '/games';
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setDeletingGame(false);
+    }
+  }
+
+  async function handleDeletePlayer(gp) {
+    const playerName = gp.player?.name || 'this player';
+    const confirmed = window.confirm(`Remove ${playerName} from this game? This is a soft delete.`);
+    if (!confirmed) return;
+
+    setError('');
+    setSuccess('');
+    setDeletingPlayerId(gp.id);
+    try {
+      await api.deleteGamePlayer(id, gp.id);
+      setSuccess(`${playerName} was removed from the game.`);
+      await loadData();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setDeletingPlayerId(null);
+    }
+  }
+
   function formatDate(iso) {
     if (!iso) return '—';
     return new Date(iso).toLocaleString('en-GB', {
@@ -147,9 +190,16 @@ export function GameDetailPage() {
             <span>📍 {view.proximityMetres}m</span>
           </div>
         </div>
-        {(view.status === 'pending' || view.status === 'active') && (
-          <button className="btn btn-primary" onClick={() => setShowInvite(true)}>+ Invite Player</button>
-        )}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {(view.status === 'pending' || view.status === 'active') && (
+            <button className="btn btn-primary" onClick={() => setShowInvite(true)}>+ Invite Player</button>
+          )}
+          {(view.status === 'pending' || view.status === 'completed') && (
+            <button className="btn btn-danger" onClick={handleDeleteGame} disabled={deletingGame}>
+              {deletingGame ? 'Deleting...' : 'Delete Game'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 16, marginBottom: 24, fontSize: 13, color: 'var(--text-muted)' }}>
@@ -328,18 +378,27 @@ export function GameDetailPage() {
                           </td>
                           {(view.status === 'pending' || view.status === 'active') && (
                             <td>
-                              <button
-                                className="btn btn-secondary btn-sm"
-                                title="Clear the bound device so the player can rejoin from any device"
-                                onClick={async () => {
-                                  try {
-                                    await api.resetPlayerDevice(id, gp.id);
-                                    setSuccess(`Device reset for ${gp.player?.name || 'player'}`);
-                                  } catch (e) { setError(e.message); }
-                                }}
-                              >
-                                Reset device
-                              </button>
+                              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                <button
+                                  className="btn btn-secondary btn-sm"
+                                  title="Clear the bound device so the player can rejoin from any device"
+                                  onClick={async () => {
+                                    try {
+                                      await api.resetPlayerDevice(id, gp.id);
+                                      setSuccess(`Device reset for ${gp.player?.name || 'player'}`);
+                                    } catch (e) { setError(e.message); }
+                                  }}
+                                >
+                                  Reset device
+                                </button>
+                                <button
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => handleDeletePlayer(gp)}
+                                  disabled={deletingPlayerId === gp.id}
+                                >
+                                  {deletingPlayerId === gp.id ? 'Removing...' : 'Remove'}
+                                </button>
+                              </div>
                             </td>
                           )}
                         </tr>

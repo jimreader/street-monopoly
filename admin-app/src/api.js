@@ -59,6 +59,8 @@ export const api = {
   invitePlayer: (gameId, data) => request(`/games/${gameId}/invite`, { method: 'POST', body: JSON.stringify(data) }),
   getGamePlayers: (gameId) => request(`/games/${gameId}/players`),
   getAdminView: (gameId) => request(`/games/${gameId}/admin-view`),
+  deleteGame: (gameId) => request(`/games/${gameId}`, { method: 'DELETE' }),
+  deleteGamePlayer: (gameId, gamePlayerId) => request(`/games/${gameId}/players/${gamePlayerId}`, { method: 'DELETE' }),
   resetPlayerDevice: (gameId, gamePlayerId) =>
     request(`/games/${gameId}/players/${gamePlayerId}/reset-device`, { method: 'POST' }),
 

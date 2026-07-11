@@ -16,6 +16,7 @@ public class Game {
     private int proximityMetres;
     private String status; // pending, active, completed
     private LocalDateTime createdAt;
+    private LocalDateTime deletedAt;
 
     // Joined fields
     private GameMap gameMap;

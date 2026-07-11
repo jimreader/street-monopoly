@@ -42,6 +42,9 @@ public interface GameStreetMapper {
     @Update("UPDATE game_street SET owner_player_id = #{ownerPlayerId}, purchased_at = NOW() WHERE id = #{id}")
     void updateOwner(@Param("id") UUID id, @Param("ownerPlayerId") UUID ownerPlayerId);
 
+    @Update("UPDATE game_street SET owner_player_id = NULL, purchased_at = NULL WHERE game_id = #{gameId} AND owner_player_id = #{playerId}")
+    void clearOwnerByGameAndPlayer(@Param("gameId") UUID gameId, @Param("playerId") UUID playerId);
+
     @Select("SELECT COUNT(*) FROM game_street WHERE game_id = #{gameId} AND owner_player_id = #{playerId}")
     int countOwnedByPlayer(@Param("gameId") UUID gameId, @Param("playerId") UUID playerId);
 }
