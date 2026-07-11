@@ -27,6 +27,11 @@ public class PlayerController {
         return gameService.getPlayerView(joinToken, deviceToken);
     }
 
+    @GetMapping("/game/{joinToken}/summary")
+    public PlayerJoinSummary getJoinSummary(@PathVariable UUID joinToken) {
+        return gameService.getPlayerJoinSummary(joinToken);
+    }
+
     /**
      * Check in at a street location.
      */

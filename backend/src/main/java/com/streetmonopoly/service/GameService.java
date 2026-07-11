@@ -174,6 +174,22 @@ public class GameService {
         return view;
     }
 
+    public PlayerJoinSummary getPlayerJoinSummary(UUID joinToken) {
+        GamePlayer gp = gamePlayerMapper.findByJoinToken(joinToken);
+        if (gp == null) throw new RuntimeException("Invalid join token");
+
+        Game game = gameMapper.findById(gp.getGameId());
+        if (game == null) throw new RuntimeException("Game not found");
+
+        PlayerJoinSummary summary = new PlayerJoinSummary();
+        summary.setGameId(game.getId());
+        summary.setGameName(game.getName());
+        summary.setStatus(game.getStatus());
+        summary.setStartTime(game.getStartTime());
+        summary.setEndTime(game.getEndTime());
+        return summary;
+    }
+
     @Transactional
     public CheckInResponse checkIn(UUID joinToken, String deviceToken, CheckInRequest request) {
         GamePlayer gp = gamePlayerMapper.findByJoinToken(joinToken);

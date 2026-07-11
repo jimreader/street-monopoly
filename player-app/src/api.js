@@ -37,6 +37,7 @@ async function request(url, options = {}) {
 }
 
 export const api = {
+  getJoinSummary: (joinToken) => request(`/game/${joinToken}/summary`),
   getGameView: (joinToken) => request(`/game/${joinToken}`),
   checkIn: (joinToken, data) => request(`/game/${joinToken}/checkin`, {
     method: 'POST',

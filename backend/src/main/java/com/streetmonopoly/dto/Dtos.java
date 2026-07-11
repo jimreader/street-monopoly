@@ -63,6 +63,15 @@ public class Dtos {
 
     // ---- Player Game View ----
     @Data
+    public static class PlayerJoinSummary {
+        private UUID gameId;
+        private String gameName;
+        private String status;
+        private LocalDateTime startTime;
+        private LocalDateTime endTime;
+    }
+
+    @Data
     public static class PlayerGameView {
         private UUID gameId;
         private String gameName;
