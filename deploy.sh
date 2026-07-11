@@ -31,7 +31,7 @@ PLAYER_CF_ID=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw player_cloudf
 ADMIN_URL=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw admin_app_url)
 PLAYER_URL=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw player_app_url)
 IMAGES_BUCKET=$(cd "$SCRIPT_DIR/terraform" && terraform output -raw images_s3_bucket)
-
+AWS_DEFAULT_OUTPUT=json
 COMPONENT="${1:-all}"
 
 # ---------------------------------------------------------------------------
@@ -83,7 +83,7 @@ deploy_admin() {
   aws s3 sync dist/ "s3://$ADMIN_BUCKET" --delete --region "$REGION"
 
   echo "🔄 Invalidating CloudFront cache..."
-  aws cloudfront create-invalidation --distribution-id "$ADMIN_CF_ID" --paths "/*" > /dev/null
+  aws cloudfront create-invalidation --distribution-id "$ADMIN_CF_ID" --paths "/*" --output json > /dev/null
 
   echo "✅ Admin app deployed at: $ADMIN_URL"
 }
@@ -100,7 +100,7 @@ deploy_player() {
   aws s3 sync dist/ "s3://$PLAYER_BUCKET" --delete --region "$REGION"
 
   echo "🔄 Invalidating CloudFront cache..."
-  aws cloudfront create-invalidation --distribution-id "$PLAYER_CF_ID" --paths "/*" > /dev/null
+  aws cloudfront create-invalidation --distribution-id "$PLAYER_CF_ID" --paths "/*" --output json > /dev/null
 
   echo "✅ Player app deployed at: $PLAYER_URL"
 }

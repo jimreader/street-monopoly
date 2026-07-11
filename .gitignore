@@ -16,3 +16,4 @@ terraform/.terraform/*
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 /.vscode
+backend/src/main/resources/application-local.properties

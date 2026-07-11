@@ -21,6 +21,12 @@ export function CreateGamePage() {
 
   function setField(key, value) { setForm(f => ({ ...f, [key]: value })); }
 
+  function toLocalDateTimePayload(value) {
+    // datetime-local is already local wall time; avoid Date/toISOString UTC conversion.
+    if (!value) return value;
+    return value.length === 16 ? `${value}:00` : value;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
@@ -28,8 +34,8 @@ export function CreateGamePage() {
       const game = await api.createGame({
         name: form.name,
         gameMapId: form.gameMapId,
-        startTime: new Date(form.startTime).toISOString(),
-        endTime: new Date(form.endTime).toISOString(),
+        startTime: toLocalDateTimePayload(form.startTime),
+        endTime: toLocalDateTimePayload(form.endTime),
         startingBalance: parseFloat(form.startingBalance),
         proximityMetres: parseInt(form.proximityMetres)
       });

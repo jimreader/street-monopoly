@@ -162,6 +162,7 @@ resource "aws_db_instance" "postgres" {
   backup_retention_period = 7
   backup_window           = "03:00-04:00"
   maintenance_window      = "sun:04:00-sun:05:00"
+  apply_immediately       = true
 
   tags = { Name = "${var.app_name}-db" }
 }

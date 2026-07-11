@@ -80,6 +80,43 @@ body {
 
 .hero-sub { color: var(--text-muted); font-size: 16px; max-width: 300px; line-height: 1.6; }
 
+.join-warning-card {
+  width: min(420px, 100%);
+  margin: 10px 0 18px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  gap: 10px;
+}
+
+.join-confirm-btn {
+  border: 0;
+  background: var(--monopoly-green);
+  color: #FFF;
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  font-size: 16px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(30,107,69,0.24);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.join-confirm-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(30,107,69,0.3);
+}
+
+.join-confirm-btn:active {
+  transform: translateY(0);
+  opacity: 0.95;
+}
+
 /* ===================== PLAYER HEADER ===================== */
 .player-header {
   position: sticky;

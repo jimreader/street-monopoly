@@ -18,12 +18,14 @@ public class EmailService {
     private String playerUrl;
 
     public void sendJoinEmail(String toEmail, String playerName, String gameName, UUID joinToken) {
-        String joinLink = playerUrl + "/game/" + joinToken;
+        String joinLink = playerUrl + "/game/" + joinToken + "/join";
         String subject = "You're in! Road Rush: " + gameName;
         String body = String.format(
             "Hi %s,\n\n" +
             "You've been added to '%s' on Road Rush!\n\n" +
-            "Tap the link below to join the game:\n%s\n\n" +
+            "Tap the link below to open your join page:\n%s\n\n" +
+            "Important: joining is one-time and tied to your browser/device.\n" +
+            "On the join page, press the Join button when you're ready, then keep that same browser page open while you play.\n\n" +
             "Save this link — you'll need it to play when the game starts.\n\n" +
             "Good luck!\nRoad Rush",
             playerName, gameName, joinLink
