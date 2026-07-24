@@ -38,6 +38,18 @@ public class Dtos {
         @NotNull @Min(1) private Integer proximityMetres;
     }
 
+    // ---- Event ----
+    @Data
+    public static class CreateEventRequest {
+        @NotBlank private String name;
+        @NotNull private UUID gameMapId;
+        @NotNull private LocalDateTime startTime;
+        @NotNull private LocalDateTime endTime;
+        @NotNull @Positive private BigDecimal startingBalance;
+        @NotNull @Min(1) private Integer proximityMetres;
+        @NotNull @Min(1) private Integer maxPlayersPerGame;
+    }
+
     // ---- Invite ----
     @Data
     public static class InvitePlayerRequest {
@@ -66,6 +78,7 @@ public class Dtos {
     public static class PlayerJoinSummary {
         private UUID gameId;
         private String gameName;
+        private String eventName;
         private String status;
         private LocalDateTime startTime;
         private LocalDateTime endTime;
@@ -75,6 +88,7 @@ public class Dtos {
     public static class PlayerGameView {
         private UUID gameId;
         private String gameName;
+        private String eventName;
         private String status;
         private LocalDateTime startTime;
         private LocalDateTime endTime;
@@ -114,6 +128,7 @@ public class Dtos {
     public static class AdminGameView {
         private UUID gameId;
         private String gameName;
+        private String eventName;
         private String status;
         private LocalDateTime startTime;
         private LocalDateTime endTime;
@@ -123,6 +138,30 @@ public class Dtos {
         private List<AdminStreetView> streets;
         private List<LeaderboardEntry> leaderboard;
         private List<PlayerLocation> playerLocations;
+    }
+
+    // ---- Admin Event View ----
+    @Data
+    public static class AdminEventView {
+        private UUID eventId;
+        private String eventName;
+        private String status;
+        private LocalDateTime startTime;
+        private LocalDateTime endTime;
+        private BigDecimal startingBalance;
+        private int proximityMetres;
+        private int maxPlayersPerGame;
+        private String mapName;
+        private List<EventGameSummary> games;
+        private List<LeaderboardEntry> leaderboard;
+    }
+
+    @Data
+    public static class EventGameSummary {
+        private UUID gameId;
+        private String gameName;
+        private String status;
+        private int playerCount;
     }
 
     @Data

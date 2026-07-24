@@ -85,12 +85,9 @@ export function GameDetailPage() {
   const [view, setView] = useState(null);
   const [players, setPlayers] = useState([]);
   const [tab, setTab] = useState('overview');
-  const [showInvite, setShowInvite] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ name: '', email: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const [deletingGame, setDeletingGame] = useState(false);
   const [deletingPlayerId, setDeletingPlayerId] = useState(null);
   useEffect(() => { loadData(); }, [id]);
 
@@ -111,41 +108,6 @@ export function GameDetailPage() {
       setView(adminView);
       setPlayers(gamePlayers);
     } catch (e) { setError(e.message); }
-  }
-
-  async function handleInvite(e) {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    try {
-      await api.invitePlayer(id, inviteForm);
-      setSuccess(`Invitation sent to ${inviteForm.email}`);
-      setInviteForm({ name: '', email: '' });
-      setShowInvite(false);
-      loadData();
-    } catch (e) { setError(e.message); }
-  }
-
-  async function handleDeleteGame() {
-    if (!(view.status === 'pending' || view.status === 'completed')) {
-      setError('Only pending or completed games can be deleted.');
-      return;
-    }
-
-    const confirmed = window.confirm(`Delete game "${view.gameName}"? This is a soft delete and cannot be accessed in normal views.`);
-    if (!confirmed) return;
-
-    setError('');
-    setSuccess('');
-    setDeletingGame(true);
-    try {
-      await api.deleteGame(id);
-      window.location.href = '/games';
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setDeletingGame(false);
-    }
   }
 
   async function handleDeletePlayer(gp) {
@@ -181,24 +143,17 @@ export function GameDetailPage() {
     <div>
       <div className="page-header">
         <div>
-          <Link to="/games" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>← Games</Link>
+          <Link to="/events" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>← Events</Link>
           <h1 className="page-title">{view.gameName}</h1>
           <div className="card-meta" style={{ marginTop: 4 }}>
             <span className={`badge badge-${view.status}`}>{view.status}</span>
+            {view.eventName && <span>🎪 {view.eventName}</span>}
             <span>🗺️ {view.mapName}</span>
             <span>💰 £{parseFloat(view.startingBalance).toFixed(0)}</span>
             <span>📍 {view.proximityMetres}m</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {(view.status === 'pending' || view.status === 'active') && (
-            <button className="btn btn-primary" onClick={() => setShowInvite(true)}>+ Invite Player</button>
-          )}
-          {(view.status === 'pending' || view.status === 'completed') && (
-            <button className="btn btn-danger" onClick={handleDeleteGame} disabled={deletingGame}>
-              {deletingGame ? 'Deleting...' : 'Delete Game'}
-            </button>
-          )}
         </div>
       </div>
 
@@ -315,11 +270,6 @@ export function GameDetailPage() {
 
       {tab === 'players' && (
         <div>
-          {(view.status === 'pending' || view.status === 'active') && (
-            <div style={{ marginBottom: 16 }}>
-              <button className="btn btn-primary btn-sm" onClick={() => setShowInvite(true)}>+ Invite Player</button>
-            </div>
-          )}
           {players.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">👥</div>
@@ -492,34 +442,6 @@ export function GameDetailPage() {
         </div>
       )}
 
-      {showInvite && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowInvite(false)}>
-          <div className="modal">
-            <h2 className="modal-title">Invite Player</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 20 }}>
-              The player will be sent an email with a link to join the game directly.
-            </p>
-            <form onSubmit={handleInvite}>
-              <div className="form-group">
-                <label className="form-label">Player Name</label>
-                <input className="form-input" value={inviteForm.name}
-                  onChange={e => setInviteForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="e.g. Alice" required autoFocus />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Email Address</label>
-                <input className="form-input" type="email" value={inviteForm.email}
-                  onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))}
-                  placeholder="alice@example.com" required />
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowInvite(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Add Player</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

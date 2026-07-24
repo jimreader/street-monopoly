@@ -4,9 +4,7 @@ import com.streetmonopoly.dto.Dtos.*;
 import com.streetmonopoly.model.Game;
 import com.streetmonopoly.model.GamePlayer;
 import com.streetmonopoly.service.GameService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,24 +18,9 @@ public class GameController {
     @Autowired
     private GameService gameService;
 
-    @GetMapping
-    public List<Game> getAllGames() {
-        return gameService.getAllGames();
-    }
-
     @GetMapping("/{id}")
     public Game getGame(@PathVariable UUID id) {
         return gameService.getGame(id);
-    }
-
-    @PostMapping
-    public Game createGame(@Valid @RequestBody CreateGameRequest request) {
-        return gameService.createGame(request);
-    }
-
-    @PostMapping("/{gameId}/invite")
-    public GamePlayer invitePlayer(@PathVariable UUID gameId, @Valid @RequestBody InvitePlayerRequest request) {
-        return gameService.invitePlayer(gameId, request);
     }
 
     @GetMapping("/{gameId}/players")
@@ -66,9 +49,4 @@ public class GameController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{gameId}")
-    public ResponseEntity<Void> deleteGame(@PathVariable UUID gameId) {
-        gameService.deleteGame(gameId);
-        return ResponseEntity.noContent().build();
-    }
 }

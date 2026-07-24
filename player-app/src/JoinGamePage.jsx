@@ -19,7 +19,7 @@ export function JoinGamePage() {
       })
       .catch((e) => {
         if (active) {
-          setError(e.message || 'Unable to load game details.');
+          setError(e.message || 'Unable to load event details.');
         }
       });
 
@@ -54,7 +54,7 @@ export function JoinGamePage() {
       </div>
 
       <div className="center-screen" style={{ minHeight: 'calc(100dvh - 66px)', justifyContent: 'flex-start', paddingTop: 28 }}>
-        <h1 className="hero-title" style={{ fontSize: 34 }}>Join This Game</h1>
+        <h1 className="hero-title" style={{ fontSize: 34 }}>Join This Event</h1>
 
         <div className="join-warning-card" style={{ marginBottom: 14, width: '100%', maxWidth: 420 }}>
           {error ? (
@@ -63,12 +63,12 @@ export function JoinGamePage() {
             </p>
           ) : !summary ? (
             <p className="hero-sub" style={{ maxWidth: 360 }}>
-              Loading game details...
+              Loading event details...
             </p>
           ) : (
             <>
               <p className="hero-sub" style={{ maxWidth: 360, marginBottom: 8 }}>
-                <strong>{summary.gameName}</strong>
+                <strong>{summary.eventName}</strong>
               </p>
               <p className="hero-sub" style={{ maxWidth: 360, marginBottom: 4 }}>
                 Start: {formatDateTime(summary.startTime)}
@@ -82,13 +82,13 @@ export function JoinGamePage() {
 
         <div className="join-warning-card">
           <p className="hero-sub" style={{ maxWidth: 360 }}>
-            You can only join once. When you are ready, tap the button below to join this game on this device.
+            You can only join once. When you are ready, tap the button below to join this event on this device.
           </p>
           <p className="hero-sub" style={{ maxWidth: 360 }}>
             Keep this same browser page open while you play. Opening the link in another device or browser may stop access.
           </p>
         </div>
-        <button className="join-confirm-btn" onClick={handleJoinClick}>Join Game Now</button>
+        <button className="join-confirm-btn" onClick={handleJoinClick}>Join Event Now</button>
       </div>
     </div>
   );

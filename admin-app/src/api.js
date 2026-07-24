@@ -52,17 +52,23 @@ export const api = {
   updateStreet: (streetId, data) => request(`/maps/streets/${streetId}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteStreet: (streetId) => request(`/maps/streets/${streetId}`, { method: 'DELETE' }),
 
-  // Games
-  getGames: () => request('/games'),
+  // Events
+  getEvents: () => request('/events'),
+  getEvent: (id) => request(`/events/${id}`),
+  createEvent: (data) => request('/events', { method: 'POST', body: JSON.stringify(data) }),
+  inviteEventPlayer: (eventId, data) => request(`/events/${eventId}/invite`, { method: 'POST', body: JSON.stringify(data) }),
+  getEventPlayers: (eventId) => request(`/events/${eventId}/players`),
+  getEventGames: (eventId) => request(`/events/${eventId}/games`),
+  getEventAdminView: (eventId) => request(`/events/${eventId}/admin-view`),
+  deleteEvent: (eventId) => request(`/events/${eventId}`, { method: 'DELETE' }),
+  deleteEventPlayer: (eventId, eventPlayerId) => request(`/events/${eventId}/players/${eventPlayerId}`, { method: 'DELETE' }),
+  resetEventPlayerDevice: (eventId, eventPlayerId) =>
+    request(`/events/${eventId}/players/${eventPlayerId}/reset-device`, { method: 'POST' }),
+
+  // Games (read/inspect generated games)
   getGame: (id) => request(`/games/${id}`),
-  createGame: (data) => request('/games', { method: 'POST', body: JSON.stringify(data) }),
-  invitePlayer: (gameId, data) => request(`/games/${gameId}/invite`, { method: 'POST', body: JSON.stringify(data) }),
   getGamePlayers: (gameId) => request(`/games/${gameId}/players`),
   getAdminView: (gameId) => request(`/games/${gameId}/admin-view`),
-  deleteGame: (gameId) => request(`/games/${gameId}`, { method: 'DELETE' }),
-  deleteGamePlayer: (gameId, gamePlayerId) => request(`/games/${gameId}/players/${gamePlayerId}`, { method: 'DELETE' }),
-  resetPlayerDevice: (gameId, gamePlayerId) =>
-    request(`/games/${gameId}/players/${gamePlayerId}/reset-device`, { method: 'POST' }),
 
   // Images
   uploadImage: async (file) => {

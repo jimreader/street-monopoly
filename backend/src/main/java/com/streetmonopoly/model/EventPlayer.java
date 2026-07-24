@@ -1,26 +1,23 @@
 package com.streetmonopoly.model;
 
 import lombok.Data;
-import java.math.BigDecimal;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-public class GamePlayer {
+public class EventPlayer {
     private UUID id;
-    private UUID gameId;
-    private UUID eventPlayerId;
+    private UUID eventId;
     private UUID playerId;
-    private BigDecimal balance;
+    private UUID assignedGameId;
     private UUID inviteToken;
     private UUID joinToken;
     private LocalDateTime invitedAt;
     private LocalDateTime joinedAt;
-    private BigDecimal finalBalance;
     private String deviceToken;
     private LocalDateTime deletedAt;
 
     // Joined
     private Player player;
-    private Game game;
 }

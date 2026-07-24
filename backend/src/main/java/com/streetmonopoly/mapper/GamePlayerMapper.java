@@ -15,6 +15,7 @@ public interface GamePlayerMapper {
     @Results({
         @Result(property = "id", column = "id"),
         @Result(property = "gameId", column = "game_id"),
+        @Result(property = "eventPlayerId", column = "event_player_id"),
         @Result(property = "playerId", column = "player_id"),
         @Result(property = "balance", column = "balance"),
         @Result(property = "inviteToken", column = "invite_token"),
@@ -39,11 +40,14 @@ public interface GamePlayerMapper {
     @Select("SELECT * FROM game_player WHERE game_id = #{gameId} AND player_id = #{playerId}")
     GamePlayer findByGameAndPlayerIncludingDeleted(@Param("gameId") UUID gameId, @Param("playerId") UUID playerId);
 
+    @Select("SELECT * FROM game_player WHERE event_player_id = #{eventPlayerId} AND deleted_at IS NULL")
+    GamePlayer findByEventPlayerId(UUID eventPlayerId);
+
     @Select("SELECT * FROM game_player WHERE game_id = #{gameId} AND id = #{id} AND deleted_at IS NULL")
     GamePlayer findByGameAndId(@Param("gameId") UUID gameId, @Param("id") UUID id);
 
-    @Insert("INSERT INTO game_player (id, game_id, player_id, balance, invite_token, join_token) " +
-            "VALUES (#{id}, #{gameId}, #{playerId}, #{balance}, #{inviteToken}, #{joinToken})")
+        @Insert("INSERT INTO game_player (id, game_id, event_player_id, player_id, balance, invite_token, join_token) " +
+            "VALUES (#{id}, #{gameId}, #{eventPlayerId}, #{playerId}, #{balance}, #{inviteToken}, #{joinToken})")
     void insert(GamePlayer gamePlayer);
 
     @Update("UPDATE game_player SET joined_at = NOW() WHERE id = #{id} AND deleted_at IS NULL")

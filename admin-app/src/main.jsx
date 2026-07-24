@@ -7,6 +7,7 @@ import { MapDetailPage } from './pages/MapDetailPage.jsx';
 import { GamesPage } from './pages/GamesPage.jsx';
 import { GameDetailPage } from './pages/GameDetailPage.jsx';
 import { CreateGamePage } from './pages/CreateGamePage.jsx';
+import { EventDetailPage } from './pages/EventDetailPage.jsx';
 import { useApiTokenProvider } from './hooks/useApiTokenProvider.js';
 import './styles.css';
 
@@ -23,7 +24,7 @@ function Nav() {
       </Link>
       <div className="nav-links">
         <Link to="/maps" className={`nav-link ${isActive('/maps') ? 'active' : ''}`}>Maps</Link>
-        <Link to="/games" className={`nav-link ${isActive('/games') ? 'active' : ''}`}>Games</Link>
+        <Link to="/events" className={`nav-link ${isActive('/events') || isActive('/games') ? 'active' : ''}`}>Events</Link>
         <div className="nav-user">
           {user?.picture && <img src={user.picture} alt="" className="nav-avatar" />}
           <span className="nav-username">{user?.name || user?.email}</span>
@@ -72,8 +73,9 @@ function AppRoutes() {
           <Route path="/" element={<GamesPage />} />
           <Route path="/maps" element={<MapsPage />} />
           <Route path="/maps/:id" element={<MapDetailPage />} />
-          <Route path="/games" element={<GamesPage />} />
-          <Route path="/games/create" element={<CreateGamePage />} />
+          <Route path="/events" element={<GamesPage />} />
+          <Route path="/events/create" element={<CreateGamePage />} />
+          <Route path="/events/:id" element={<EventDetailPage />} />
           <Route path="/games/:id" element={<GameDetailPage />} />
         </Routes>
       </main>

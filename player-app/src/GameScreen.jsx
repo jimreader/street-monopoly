@@ -252,7 +252,7 @@ export function GameScreen() {
         </div>
         <div className="center-screen" style={{ minHeight: 'calc(100dvh - 66px)' }}>
           <img src="/logo.svg" alt="Road Rush" style={{ height: 36, animation: 'pulse 2s infinite' }} />
-          <p className="hero-sub">Loading game...</p>
+          <p className="hero-sub">Loading event...</p>
         </div>
       </div>
     );
@@ -271,7 +271,7 @@ export function GameScreen() {
         </div>
         <div className="countdown-screen" style={{ minHeight: 'calc(100dvh - 66px)' }}>
           <div style={{ fontSize: 64, marginBottom: 24 }}>⏳</div>
-          <p className="countdown-label">Game starts in</p>
+          <p className="countdown-label">Event starts in</p>
           <div className="countdown-timer">{countdown}</div>
           <p className="countdown-date">
             {new Date(game.startTime).toLocaleString('en-GB', {
@@ -280,7 +280,7 @@ export function GameScreen() {
             })}
           </p>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, marginTop: 32 }}>
-            {game.gameName}
+            {game.eventName}
           </h2>
         </div>
       </div>
@@ -306,8 +306,8 @@ export function GameScreen() {
         </div>
         <div className="game-over-screen" style={{ minHeight: 'auto', paddingBottom: 20 }}>
           <div className="game-over-icon">🏁</div>
-          <h1 className="game-over-title">Game Over</h1>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>{game.gameName}</p>
+          <h1 className="game-over-title">Event Complete</h1>
+          <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>{game.eventName}</p>
 
           <p className="final-note" style={{ marginBottom: 20, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>
             Please return to Game HQ for the final results announcement.
@@ -378,7 +378,7 @@ export function GameScreen() {
             </div>
           </div>
 
-          <div className="game-name game-name-full">{game.gameName}</div>
+          <div className="game-name game-name-full">{game.eventName}</div>
 
           <div className="gps-status">
             <span className={`gps-dot ${gpsPos && !gpsError ? 'active' : 'inactive'}`} />
