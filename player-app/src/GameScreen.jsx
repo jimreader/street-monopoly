@@ -379,6 +379,7 @@ export function GameScreen() {
     const notVisited = game.streets.length - visited;
     const rentCollectedCount = (game.rentCollections || []).length;
     const rentPaidCount = game.streets.filter(s => s.visitStatus === 'visited_rent_paid').length;
+    const challengesCompletedCount = challenges.filter(c => c.submissionStatus === 'submitted_accomplished').length;
 
     return (
       <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
@@ -419,6 +420,10 @@ export function GameScreen() {
               <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-red)' }}>{rentPaidCount}</div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Times rent was paid</div>
             </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-green)' }}>{challengesCompletedCount}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Challenges completed</div>
+            </div>
           </div>
 
           <p className="final-note">
@@ -448,6 +453,27 @@ export function GameScreen() {
   const balance = parseFloat(game.balance);
   const ownedCount = game.streets.filter(s => s.ownedByPlayer).length;
   const visitedCount = game.streets.filter(s => s.visitStatus !== 'unvisited').length;
+  const sortedChallenges = [...challenges].sort((a, b) => {
+    const rank = (challenge) => {
+      const status = (challenge.status || '').toLowerCase().trim();
+      const submissionStatus = (challenge.submissionStatus || '').toLowerCase().trim();
+
+      // Keep actionable items at the top.
+      if (status === 'active' && submissionStatus === 'awaiting_submission') return 0;
+      if (status === 'active') return 1;
+
+      // Player-complete outcomes belong at the bottom.
+      if (
+        status === 'completed' ||
+        submissionStatus === 'submitted_accomplished' ||
+        submissionStatus === 'submitted_failed' ||
+        submissionStatus === 'missed'
+      ) return 3;
+
+      return 2;
+    };
+    return rank(a) - rank(b);
+  });
   const activeChallenges = challenges.filter(c => c.status === 'active');
 
   return (
@@ -505,7 +531,7 @@ export function GameScreen() {
             <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No challenges are available for this event.</div>
           ) : (
             <div style={{ display: 'grid', gap: 10 }}>
-              {challenges.map(ch => {
+              {sortedChallenges.map(ch => {
                 const canSubmit = ch.status === 'active' && ch.submissionStatus === 'awaiting_submission';
                 const submitted = ch.submittedPhotoUrl;
                 return (
