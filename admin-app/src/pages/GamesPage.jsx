@@ -51,8 +51,8 @@ export function GamesPage() {
 
     return (
       <div className="card">
-        <Link to={`/events/${event.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <Link to={`/events/${event.id}`} className="card-link">
+          <div className="card-header-row" style={{ marginBottom: 8 }}>
             <h3 className="card-title">{event.name}</h3>
             <span className={`badge badge-${event.status}`}>{event.status}</span>
           </div>
@@ -65,7 +65,7 @@ export function GamesPage() {
         </Link>
 
         {canDelete && (
-          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="card-actions card-footer" style={{ marginTop: 12, justifyContent: 'flex-end' }}>
             <button
               className="btn btn-danger btn-sm"
               onClick={() => handleDeleteEvent(event)}
@@ -80,19 +80,22 @@ export function GamesPage() {
   }
 
   return (
-    <div>
+    <div className="page-shell">
       <div className="page-header">
         <div>
+          <div className="section-eyebrow">Administration</div>
           <h1 className="page-title">Events</h1>
           <p className="page-subtitle">Create and manage events that automatically split players into balanced games</p>
         </div>
-        <Link to="/events/create" className="btn btn-primary">+ New Event</Link>
+        <div className="page-actions">
+          <Link to="/events/create" className="btn btn-primary">+ New Event</Link>
+        </div>
       </div>
 
       {error && <div className="error-msg">{error}</div>}
 
       {events.length === 0 ? (
-        <div className="empty-state">
+        <div className="empty-state-card">
           <div className="empty-state-icon">🎪</div>
           <p>No events yet. Create your first event to get started.</p>
         </div>
@@ -100,19 +103,19 @@ export function GamesPage() {
         <>
           {active.length > 0 && (
             <div className="section">
-              <h2 className="section-title">🟢 Active</h2>
+              <h2 className="section-title">Active</h2>
               <div className="card-grid">{active.map(e => <EventCard key={e.id} event={e} />)}</div>
             </div>
           )}
           {pending.length > 0 && (
             <div className="section">
-              <h2 className="section-title">⏳ Pending</h2>
+              <h2 className="section-title">Pending</h2>
               <div className="card-grid">{pending.map(e => <EventCard key={e.id} event={e} />)}</div>
             </div>
           )}
           {completed.length > 0 && (
             <div className="section">
-              <h2 className="section-title">✅ Completed</h2>
+              <h2 className="section-title">Completed</h2>
               <div className="card-grid">{completed.map(e => <EventCard key={e.id} event={e} />)}</div>
             </div>
           )}

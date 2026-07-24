@@ -205,15 +205,16 @@ export function EventDetailPage() {
     });
   }
 
-  if (!view) return <div className="empty-state">Loading...</div>;
+  if (!view) return <div className="empty-state-card">Loading...</div>;
 
   return (
-    <div>
+    <div className="page-shell">
       <div className="page-header">
         <div>
-          <Link to="/events" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>← Events</Link>
+          <Link to="/events" className="muted">← Events</Link>
+          <div className="section-eyebrow" style={{ marginTop: 8 }}>Events</div>
           <h1 className="page-title">{view.eventName}</h1>
-          <div className="card-meta" style={{ marginTop: 4 }}>
+          <div className="card-meta" style={{ marginTop: 6 }}>
             <span className={`badge badge-${view.status}`}>{view.status}</span>
             <span>🗺️ {view.mapName}</span>
             <span>💰 £{parseFloat(view.startingBalance).toFixed(0)}</span>
@@ -221,7 +222,7 @@ export function EventDetailPage() {
             <span>👥 max {view.maxPlayersPerGame}/game</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="page-actions">
           {(view.status === 'pending' || view.status === 'active') && (
             <button className="btn btn-primary" onClick={() => setShowInvite(true)}>+ Invite Player</button>
           )}
@@ -233,13 +234,13 @@ export function EventDetailPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 16, marginBottom: 24, fontSize: 13, color: 'var(--text-muted)' }}>
+      <div className="card-meta" style={{ marginBottom: 24 }}>
         <span>Start: {formatDate(view.startTime)}</span>
         <span>End: {formatDate(view.endTime)}</span>
       </div>
 
       {error && <div className="error-msg">{error}</div>}
-      {success && <div style={{ color: 'var(--monopoly-green)', background: 'var(--monopoly-green-light)', padding: '10px 14px', borderRadius: 'var(--radius)', fontSize: 14, marginBottom: 16 }}>{success}</div>}
+      {success && <div className="success-msg">{success}</div>}
 
       <div className="tabs">
         <button className={`tab ${tab === 'players' ? 'active' : ''}`} onClick={() => setTab('players')}>Players ({players.length})</button>
@@ -256,7 +257,7 @@ export function EventDetailPage() {
             </div>
           )}
           {players.length === 0 ? (
-            <div className="empty-state">
+            <div className="empty-state-card">
               <div className="empty-state-icon">👥</div>
               <p>No players invited yet.</p>
             </div>
@@ -330,7 +331,7 @@ export function EventDetailPage() {
           )}
 
           {challenges.length === 0 ? (
-            <div className="empty-state">
+            <div className="empty-state-card">
               <div className="empty-state-icon">📸</div>
               <p>No challenges configured yet.</p>
             </div>
@@ -390,7 +391,7 @@ export function EventDetailPage() {
       {tab === 'games' && (
         <div>
           {games.length === 0 ? (
-            <div className="empty-state">
+            <div className="empty-state-card">
               <div className="empty-state-icon">🎮</div>
               <p>Games will be generated automatically when the event starts.</p>
             </div>
@@ -405,7 +406,7 @@ export function EventDetailPage() {
                   <div className="card-meta" style={{ marginBottom: 12 }}>
                     <span>🕐 {formatDate(game.startTime)}</span>
                   </div>
-                  <Link className="btn btn-secondary btn-sm" to={`/games/${game.id}`}>Open Game Dashboard</Link>
+                  <Link className="btn btn-primary btn-sm" to={`/games/${game.id}`}>Open Game Dashboard</Link>
                 </div>
               ))}
             </div>
@@ -416,7 +417,7 @@ export function EventDetailPage() {
       {tab === 'leaderboard' && (
         <div className="card">
           {!view.leaderboard || view.leaderboard.length === 0 ? (
-            <div className="empty-state">
+            <div className="empty-state-card">
               <div className="empty-state-icon">🏆</div>
               <p>No players in this event yet.</p>
             </div>
@@ -447,11 +448,14 @@ export function EventDetailPage() {
       {showInvite && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowInvite(false)}>
           <div className="modal">
-            <h2 className="modal-title">Invite Player</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 20 }}>
-              The player will be sent an email link to join this event.
-            </p>
-            <form onSubmit={handleInvite}>
+            <div className="modal-header">
+              <div>
+                <div className="modal-kicker">Invitation</div>
+                <h2 className="modal-title">Invite Player</h2>
+                <p className="modal-lead">The player will be sent an email link to join this event.</p>
+              </div>
+            </div>
+            <form className="modal-body" onSubmit={handleInvite}>
               <div className="form-group">
                 <label className="form-label">Player Name</label>
                 <input className="form-input" value={inviteForm.name}
@@ -476,11 +480,14 @@ export function EventDetailPage() {
       {showChallengeModal && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowChallengeModal(false)}>
           <div className="modal">
-            <h2 className="modal-title">{editingChallenge ? 'Edit Challenge' : 'Add Challenge'}</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 20 }}>
-              Challenge timings are randomized automatically when the event starts.
-            </p>
-            <form onSubmit={handleSaveChallenge}>
+            <div className="modal-header">
+              <div>
+                <div className="modal-kicker">Challenges</div>
+                <h2 className="modal-title">{editingChallenge ? 'Edit Challenge' : 'Add Challenge'}</h2>
+                <p className="modal-lead">Challenge timings are randomized automatically when the event starts.</p>
+              </div>
+            </div>
+            <form className="modal-body" onSubmit={handleSaveChallenge}>
               <div className="form-group">
                 <label className="form-label">Challenge</label>
                 <input
@@ -528,21 +535,25 @@ export function EventDetailPage() {
 
       {showReviewModal && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowReviewModal(false)}>
-          <div className="modal" style={{ maxWidth: 900, width: '95vw' }}>
-            <h2 className="modal-title">Review Challenge Submissions</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 12 }}>
-              {reviewChallenge?.description}
-            </p>
-
-            {challengeSubmissions.length === 0 ? (
-              <div className="empty-state" style={{ marginBottom: 16 }}>
-                <p>No submissions yet.</p>
+          <div className="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="review-challenges-title">
+            <div className="modal-header">
+              <div>
+                <div className="modal-kicker">Review</div>
+                <h2 className="modal-title" id="review-challenges-title">Review Challenge Submissions</h2>
+                <p className="modal-lead">{reviewChallenge?.description}</p>
               </div>
-            ) : (
-              <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                {challengeSubmissions.map(sub => (
-                  <div key={sub.submissionId} className="card" style={{ marginBottom: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start' }}>
+            </div>
+
+            <div className="modal-body">
+              {challengeSubmissions.length === 0 ? (
+                <div className="empty-state-card">
+                  <p>No submissions yet.</p>
+                </div>
+              ) : (
+                <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: 4 }}>
+                  {challengeSubmissions.map(sub => (
+                    <div key={sub.submissionId} className="card" style={{ marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start' }}>
                       <div>
                         <div style={{ fontWeight: 700 }}>{sub.playerName}</div>
                         <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>{sub.playerEmail}</div>
@@ -556,34 +567,35 @@ export function EventDetailPage() {
                         </div>
                       </div>
                       <a className="btn btn-secondary btn-sm" href={sub.photoUrl} target="_blank" rel="noreferrer">Open Photo</a>
-                    </div>
-
-                    {sub.photoUrl && (
-                      <img src={sub.photoUrl} alt="Challenge submission" style={{ width: '100%', borderRadius: 8, marginTop: 12, maxHeight: 280, objectFit: 'cover' }} />
-                    )}
-
-                    {sub.reviewStatus === 'pending' && view.status === 'active' && (
-                      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleReviewSubmission(sub, 'accomplished')}
-                          disabled={reviewingSubmissionId === sub.submissionId}
-                        >
-                          Mark Accomplished (+£{parseFloat(reviewChallenge?.prizeAmount || 0).toFixed(0)})
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleReviewSubmission(sub, 'failed')}
-                          disabled={reviewingSubmissionId === sub.submissionId}
-                        >
-                          Mark Failed
-                        </button>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+
+                      {sub.photoUrl && (
+                        <img src={sub.photoUrl} alt="Challenge submission" style={{ width: '100%', borderRadius: 8, marginTop: 12, maxHeight: 280, objectFit: 'cover' }} />
+                      )}
+
+                      {sub.reviewStatus === 'pending' && view.status === 'active' && (
+                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleReviewSubmission(sub, 'accomplished')}
+                            disabled={reviewingSubmissionId === sub.submissionId}
+                          >
+                            Mark Accomplished (+£{parseFloat(reviewChallenge?.prizeAmount || 0).toFixed(0)})
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleReviewSubmission(sub, 'failed')}
+                            disabled={reviewingSubmissionId === sub.submissionId}
+                          >
+                            Mark Failed
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div className="modal-actions">
               <button type="button" className="btn btn-secondary" onClick={() => setShowReviewModal(false)}>Close</button>

@@ -137,15 +137,16 @@ export function GameDetailPage() {
     });
   }
 
-  if (!view) return <div className="empty-state">Loading...</div>;
+  if (!view) return <div className="empty-state-card">Loading...</div>;
 
   return (
-    <div>
+    <div className="page-shell">
       <div className="page-header">
         <div>
-          <Link to="/events" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>← Events</Link>
+          <Link to="/events" className="muted">← Events</Link>
+          <div className="section-eyebrow" style={{ marginTop: 8 }}>Games</div>
           <h1 className="page-title">{view.gameName}</h1>
-          <div className="card-meta" style={{ marginTop: 4 }}>
+          <div className="card-meta" style={{ marginTop: 6 }}>
             <span className={`badge badge-${view.status}`}>{view.status}</span>
             {view.eventName && <span>🎪 {view.eventName}</span>}
             <span>🗺️ {view.mapName}</span>
@@ -153,17 +154,16 @@ export function GameDetailPage() {
             <span>📍 {view.proximityMetres}m</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        </div>
+        <div className="page-actions" />
       </div>
 
-      <div style={{ display: 'flex', gap: 16, marginBottom: 24, fontSize: 13, color: 'var(--text-muted)' }}>
+      <div className="card-meta" style={{ marginBottom: 24 }}>
         <span>Start: {formatDate(view.startTime)}</span>
         <span>End: {formatDate(view.endTime)}</span>
       </div>
 
       {error && <div className="error-msg">{error}</div>}
-      {success && <div style={{ color: 'var(--monopoly-green)', background: 'var(--monopoly-green-light)', padding: '10px 14px', borderRadius: 'var(--radius)', fontSize: 14, marginBottom: 16 }}>{success}</div>}
+      {success && <div className="success-msg">{success}</div>}
 
       <div className="tabs">
         <button className={`tab ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>Overview</button>
@@ -173,14 +173,14 @@ export function GameDetailPage() {
       </div>
 
       {tab === 'overview' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div className="metric-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
           <div className="card">
             <h3 className="card-title" style={{ fontSize: 18 }}>Leaderboard</h3>
             {view.leaderboard.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>No players yet</p>
+              <p className="muted" style={{ fontSize: 14 }}>No players yet</p>
             ) : (
               view.leaderboard.slice(0, 5).map(entry => (
-                <div key={entry.playerId} className="leaderboard-row" style={{ padding: '10px 0' }}>
+                <div key={entry.playerId} className="leaderboard-row">
                   <span className={`leaderboard-rank ${entry.rank === 1 ? 'gold' : entry.rank === 2 ? 'silver' : entry.rank === 3 ? 'bronze' : ''}`}>
                     {entry.rank}
                   </span>
@@ -197,10 +197,10 @@ export function GameDetailPage() {
           <div className="card">
             <h3 className="card-title" style={{ fontSize: 18 }}>Street Ownership</h3>
             {view.streets.filter(s => s.ownerName).length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>No streets purchased yet</p>
+              <p className="muted" style={{ fontSize: 14 }}>No streets purchased yet</p>
             ) : (
               view.streets.filter(s => s.ownerName).map(s => (
-                <div key={s.streetId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                <div key={s.streetId} className="split-row" style={{ padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
                   <span className="colour-dot" style={{ backgroundColor: `var(--${s.colour})` }} />
                   <span style={{ flex: 1, fontSize: 14 }}>{s.name}</span>
                   <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{s.ownerName}</span>
@@ -271,7 +271,7 @@ export function GameDetailPage() {
       {tab === 'players' && (
         <div>
           {players.length === 0 ? (
-            <div className="empty-state">
+            <div className="empty-state-card">
               <div className="empty-state-icon">👥</div>
               <p>No players invited yet.</p>
             </div>
@@ -414,7 +414,7 @@ export function GameDetailPage() {
       {tab === 'leaderboard' && (
         <div className="card">
           {view.leaderboard.length === 0 ? (
-            <div className="empty-state">
+            <div className="empty-state-card">
               <div className="empty-state-icon">🏆</div>
               <p>No players in this game yet.</p>
             </div>

@@ -44,7 +44,7 @@ export function JoinGamePage() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
+    <div className="app-shell app-shell--player">
       <div className="app-brand-band">
         <img
           src="/logo.svg"
@@ -53,10 +53,11 @@ export function JoinGamePage() {
         />
       </div>
 
-      <div className="center-screen" style={{ minHeight: 'calc(100dvh - 66px)', justifyContent: 'flex-start', paddingTop: 28 }}>
+      <main className="center-screen" style={{ minHeight: 'calc(100dvh - 66px)', justifyContent: 'flex-start', paddingTop: 28 }}>
+        <div className="section-eyebrow">Invitation</div>
         <h1 className="hero-title" style={{ fontSize: 34 }}>Join This Event</h1>
 
-        <div className="join-warning-card" style={{ marginBottom: 14, width: '100%', maxWidth: 420 }}>
+        <div className="join-warning-card" style={{ marginBottom: 14, width: '100%', maxWidth: 420 }} aria-live="polite">
           {error ? (
             <p className="hero-sub" style={{ color: 'var(--danger)', maxWidth: 360 }}>
               {error}
@@ -89,7 +90,7 @@ export function JoinGamePage() {
           </p>
         </div>
         <button className="join-confirm-btn" onClick={handleJoinClick}>Join Event Now</button>
-      </div>
+      </main>
     </div>
   );
 }

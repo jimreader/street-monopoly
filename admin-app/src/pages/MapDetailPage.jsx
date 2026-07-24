@@ -169,34 +169,37 @@ export function MapDetailPage() {
 
   function setField(key, value) { setForm(f => ({ ...f, [key]: value })); }
 
-  if (!map) return <div className="empty-state"><div className="loading-spinner" /></div>;
+  if (!map) return <div className="empty-state-card"><div className="loading-spinner" /></div>;
 
   return (
-    <div>
+    <div className="page-shell">
       <div className="page-header">
         <div>
-          <Link to="/maps" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }}>← Back</Link>
+          <Link to="/maps" className="muted">← Back</Link>
+          <div className="section-eyebrow" style={{ marginTop: 8 }}>Maps</div>
           <h1 className="page-title">{map.name}</h1>
-          <div className="card-meta" style={{ marginTop: 2 }}>
+          <div className="card-meta" style={{ marginTop: 6 }}>
             {map.postcodeArea && <span>📮 {map.postcodeArea}</span>}
             <span>📍 {map.streets?.length || 0} streets</span>
           </div>
         </div>
-        {!editing && (
-          <button className="btn btn-primary" onClick={openAdd}>+ Add</button>
-        )}
+        <div className="page-actions">
+          {!editing && (
+            <button className="btn btn-primary" onClick={openAdd}>+ Add</button>
+          )}
+        </div>
       </div>
 
       {error && <div className="error-msg">{error}</div>}
 
       {/* ===== ADD / EDIT FORM ===== */}
       {editing && (
-        <div ref={formRef} className="card" style={{ marginBottom: 20, borderColor: 'var(--monopoly-green)', borderWidth: 2 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700 }}>
+        <div ref={formRef} className="surface-panel" style={{ marginBottom: 20, borderColor: 'rgba(25,95,61,0.35)', boxShadow: '0 16px 42px rgba(25,95,61,0.08)' }}>
+          <div className="card-header-row" style={{ marginBottom: 16 }}>
+            <h3 className="card-title" style={{ marginBottom: 0 }}>
               {editingStreet ? 'Edit Street' : 'Add Street'}
             </h3>
-            <button className="btn btn-secondary btn-sm" onClick={cancelEdit}>✕</button>
+            <button className="btn btn-secondary btn-sm" onClick={cancelEdit} aria-label="Cancel editing">✕</button>
           </div>
 
           <form onSubmit={handleSave}>
@@ -278,21 +281,14 @@ export function MapDetailPage() {
 
             <div className="form-group">
               <label className="form-label">Colour Group</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              <div className="colour-picker-grid">
                 {COLOURS.map(c => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => setField('colour', c)}
-                    style={{
-                      padding: '10px 4px',
-                      borderRadius: 'var(--radius)',
-                      border: form.colour === c ? '2.5px solid var(--text)' : '1.5px solid var(--border)',
-                      background: form.colour === c ? 'var(--surface)' : 'var(--bg)',
-                      cursor: 'pointer',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                      transition: 'all 0.1s',
-                    }}
+                    className={`option-tile ${form.colour === c ? 'is-selected' : ''}`}
+                    aria-pressed={form.colour === c}
                   >
                     <span style={{
                       width: 24, height: 24, borderRadius: 6,
@@ -308,9 +304,9 @@ export function MapDetailPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-              <button type="button" className="btn btn-secondary" onClick={cancelEdit} style={{ flex: 1 }}>Cancel</button>
-              <button type="submit" className="btn btn-green" disabled={saving} style={{ flex: 2 }}>
+            <div className="card-actions" style={{ marginTop: 20 }}>
+              <button type="button" className="btn btn-secondary btn-block" onClick={cancelEdit}>Cancel</button>
+              <button type="submit" className="btn btn-green btn-block" disabled={saving}>
                 {saving ? (uploading ? 'Uploading photo...' : 'Saving...') : (editingStreet ? 'Save Changes' : 'Add Street')}
               </button>
             </div>
@@ -321,7 +317,7 @@ export function MapDetailPage() {
       {/* ===== STREET LIST (mobile card layout) ===== */}
       {(!map.streets || map.streets.length === 0) ? (
         !editing && (
-          <div className="empty-state">
+          <div className="empty-state-card">
             <div className="empty-state-icon">🏘️</div>
             <p>No streets yet. Go to a street location and tap Add to get started.</p>
           </div>
@@ -341,19 +337,19 @@ export function MapDetailPage() {
               )}
 
               <div style={{ padding: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 8 }}>
+                <div className="card-header-row" style={{ alignItems: 'start' }}>
                   <div>
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16 }}>{s.name}</div>
-                    <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
+                    <div className="card-title" style={{ fontSize: 16, marginBottom: 0 }}>{s.name}</div>
+                    <div className="card-meta" style={{ marginTop: 2 }}>
                       Buy £{parseFloat(s.price).toFixed(0)} · Rent £{parseFloat(s.rentalPrice).toFixed(0)}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                  <div className="card-actions" style={{ gap: 4, flexShrink: 0 }}>
                     <button className="btn btn-secondary btn-sm" onClick={() => openEdit(s)}>Edit</button>
                     <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDelete(s.id)}>✕</button>
                   </div>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 6 }}>
+                <div className="muted" style={{ fontSize: 11, marginTop: 6 }}>
                   📍 {s.latitude.toFixed(5)}, {s.longitude.toFixed(5)}
                 </div>
               </div>

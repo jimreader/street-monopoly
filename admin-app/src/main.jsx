@@ -17,14 +17,14 @@ function Nav() {
   const isActive = (path) => location.pathname.startsWith(path);
 
   return (
-    <nav className="nav">
+    <nav className="nav" aria-label="Primary">
       <Link to="/" className="nav-brand">
         <img src="/logo.svg" alt="Road Rush" style={{ height: 26 }} />
         <span className="brand-badge">ADMIN</span>
       </Link>
       <div className="nav-links">
-        <Link to="/maps" className={`nav-link ${isActive('/maps') ? 'active' : ''}`}>Maps</Link>
-        <Link to="/events" className={`nav-link ${isActive('/events') || isActive('/games') ? 'active' : ''}`}>Events</Link>
+        <Link to="/maps" className={`nav-link ${isActive('/maps') ? 'active' : ''}`} aria-current={isActive('/maps') ? 'page' : undefined}>Maps</Link>
+        <Link to="/events" className={`nav-link ${isActive('/events') || isActive('/games') ? 'active' : ''}`} aria-current={isActive('/events') || isActive('/games') ? 'page' : undefined}>Events</Link>
         <div className="nav-user">
           {user?.picture && <img src={user.picture} alt="" className="nav-avatar" />}
           <span className="nav-username">{user?.name || user?.email}</span>
@@ -67,8 +67,9 @@ function RequireAuth({ children }) {
 function AppRoutes() {
   return (
     <RequireAuth>
+      <a href="#app-main" className="skip-link">Skip to content</a>
       <Nav />
-      <main className="main-content">
+      <main id="app-main" className="main-content" tabIndex={-1}>
         <Routes>
           <Route path="/" element={<GamesPage />} />
           <Route path="/maps" element={<MapsPage />} />
@@ -86,9 +87,11 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/*" element={<AppRoutes />} />
-      </Routes>
+      <div className="app-shell">
+        <Routes>
+          <Route path="/*" element={<AppRoutes />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }

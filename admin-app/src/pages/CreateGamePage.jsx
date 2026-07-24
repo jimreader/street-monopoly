@@ -47,10 +47,11 @@ export function CreateGamePage() {
   const selectedMap = maps.find(m => m.id === form.gameMapId);
 
   return (
-    <div>
+    <div className="page-shell">
       <div className="page-header">
         <div>
-          <Link to="/events" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none' }}>← Events</Link>
+          <Link to="/events" className="muted">← Events</Link>
+          <div className="section-eyebrow" style={{ marginTop: 8 }}>Administration</div>
           <h1 className="page-title">Create Event</h1>
         </div>
       </div>
@@ -74,7 +75,7 @@ export function CreateGamePage() {
               ))}
             </select>
             {maps.length === 0 && (
-              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>
+              <p className="form-help">
                 No maps found. <Link to="/maps">Create a map first</Link>.
               </p>
             )}
@@ -116,17 +117,13 @@ export function CreateGamePage() {
           </div>
 
           {selectedMap && selectedMap.streets?.length > 0 && (
-            <div style={{ marginTop: 16, padding: 16, background: 'var(--bg)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-              <p style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-muted)', marginBottom: 8 }}>
+            <div className="preview-panel">
+              <p className="section-eyebrow" style={{ marginBottom: 8 }}>
                 Map Preview - {selectedMap.streets.length} streets
               </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div className="chip-list">
                 {selectedMap.streets.map(s => (
-                  <span key={s.id} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    padding: '4px 10px', borderRadius: 20, fontSize: 12,
-                    background: 'var(--surface)', border: '1px solid var(--border)'
-                  }}>
+                  <span key={s.id} className="chip">
                     <span className="colour-dot" style={{ backgroundColor: `var(--${s.colour})`, width: 8, height: 8 }} />
                     {s.name}
                   </span>

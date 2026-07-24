@@ -32,19 +32,22 @@ export function MapsPage() {
   }
 
   return (
-    <div>
+    <div className="page-shell">
       <div className="page-header">
         <div>
+          <div className="section-eyebrow">Administration</div>
           <h1 className="page-title">Game Maps</h1>
           <p className="page-subtitle">Create maps with streets for your games</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ New Map</button>
+        <div className="page-actions">
+          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ New Map</button>
+        </div>
       </div>
 
       {error && <div className="error-msg">{error}</div>}
 
       {maps.length === 0 ? (
-        <div className="empty-state">
+        <div className="empty-state-card">
           <div className="empty-state-icon">🗺️</div>
           <p>No maps yet. Create your first game map to get started.</p>
         </div>
@@ -52,8 +55,8 @@ export function MapsPage() {
         <div className="card-grid">
           {maps.map(m => (
             <div key={m.id} className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                <Link to={`/maps/${m.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <div className="card-header-row">
+                <Link to={`/maps/${m.id}`} className="card-link">
                   <h3 className="card-title">{m.name}</h3>
                 </Link>
                 <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDelete(m.id)}>✕</button>
@@ -62,7 +65,7 @@ export function MapsPage() {
                 {m.postcodeArea && <span>📮 {m.postcodeArea}</span>}
                 <span>📍 {m.streets?.length || 0} streets</span>
                 {m.streets?.length > 0 && (
-                  <span style={{ display: 'flex', gap: '3px' }}>
+                  <span className="cluster">
                     {[...new Set(m.streets.map(s => s.colour))].map(c => (
                       <span key={c} className="colour-dot" style={{ backgroundColor: `var(--${c})`, width: 10, height: 10 }} />
                     ))}
@@ -75,10 +78,16 @@ export function MapsPage() {
       )}
 
       {showCreate && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowCreate(false)}>
-          <div className="modal">
-            <h2 className="modal-title">New Game Map</h2>
-            <form onSubmit={handleCreate}>
+        <div className="modal-overlay" role="presentation" onClick={(e) => e.target === e.currentTarget && setShowCreate(false)}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="new-map-title">
+            <div className="modal-header">
+              <div>
+                <div className="modal-kicker">Maps</div>
+                <h2 className="modal-title" id="new-map-title">New Game Map</h2>
+                <p className="modal-lead">Create a map shell first, then add the streets you want players to discover.</p>
+              </div>
+            </div>
+            <form className="modal-body" onSubmit={handleCreate}>
               <div className="form-group">
                 <label className="form-label">Map Name</label>
                 <input className="form-input" value={newName} onChange={e => setNewName(e.target.value)}
@@ -88,7 +97,7 @@ export function MapsPage() {
                 <label className="form-label">Postcode Area</label>
                 <input className="form-input" value={newPostcode} onChange={e => setNewPostcode(e.target.value)}
                   placeholder="e.g. DE22 or DE73" style={{ textTransform: 'uppercase' }} />
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                <p className="form-help">
                   The UK postcode area this map is based in. Used to centre the map when adding streets.
                 </p>
               </div>

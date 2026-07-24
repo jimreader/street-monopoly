@@ -21,16 +21,10 @@ function RentIncomeList({ rentCollections }) {
   const totalRent = rentCollections.reduce((s, r) => s + parseFloat(r.amount), 0);
 
   return (
-    <div style={{
-      background: 'var(--surface)', border: '1.5px solid var(--border)',
-      borderRadius: 'var(--radius-lg)', overflow: 'hidden'
-    }}>
-      <div style={{
-        padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        borderBottom: '1px solid var(--border)', background: 'var(--bg-warm)'
-      }}>
+    <div className="panel" style={{ overflow: 'hidden' }}>
+      <div className="card-header-row" style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-warm)' }}>
         <span style={{ fontWeight: 700, fontSize: 14 }}>Rent Income</span>
-        <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--monopoly-green)' }}>+£{totalRent.toFixed(0)}</span>
+        <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--primary)' }}>+£{totalRent.toFixed(0)}</span>
       </div>
       {rentCollections.map((rc, i) => (
         <div key={i} style={{
@@ -90,7 +84,11 @@ export function GameScreen() {
         api.getGameView(joinToken),
         api.getChallenges(joinToken),
       ]);
-      setGame(gameData);
+      setGame({
+        ...gameData,
+        streets: Array.isArray(gameData?.streets) ? gameData.streets : [],
+        rentCollections: Array.isArray(gameData?.rentCollections) ? gameData.rentCollections : [],
+      });
       setChallenges(challengeData || []);
     } catch (e) {
       setError(e.message);
@@ -308,8 +306,8 @@ export function GameScreen() {
 
   if (error) {
     return (
-      <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
-        <div className="app-brand-band">
+      <div className="app-shell app-shell--player">
+        <div className="game-banner">
           <img
             src="/logo.svg"
             alt="Road Rush"
@@ -327,8 +325,8 @@ export function GameScreen() {
 
   if (!game) {
     return (
-      <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
-        <div className="app-brand-band">
+      <div className="app-shell app-shell--player">
+        <div className="game-banner">
           <img
             src="/logo.svg"
             alt="Road Rush"
@@ -346,8 +344,8 @@ export function GameScreen() {
   // PENDING — show countdown
   if (game.status === 'pending') {
     return (
-      <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
-        <div className="app-brand-band">
+      <div className="app-shell app-shell--player">
+        <div className="game-banner">
           <img
             src="/logo.svg"
             alt="Road Rush"
@@ -374,16 +372,17 @@ export function GameScreen() {
 
   // COMPLETED — show final results
   if (game.status === 'completed') {
-    const owned = game.streets.filter(s => s.ownedByPlayer).length;
-    const visited = game.streets.filter(s => s.visitStatus !== 'unvisited').length;
-    const notVisited = game.streets.length - visited;
+    const streets = game.streets || [];
+    const owned = streets.filter(s => s.ownedByPlayer).length;
+    const visited = streets.filter(s => s.visitStatus !== 'unvisited').length;
+    const notVisited = streets.length - visited;
     const rentCollectedCount = (game.rentCollections || []).length;
-    const rentPaidCount = game.streets.filter(s => s.visitStatus === 'visited_rent_paid').length;
+    const rentPaidCount = streets.filter(s => s.visitStatus === 'visited_rent_paid').length;
     const challengesCompletedCount = challenges.filter(c => c.submissionStatus === 'submitted_accomplished').length;
 
     return (
-      <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
-        <div className="app-brand-band">
+      <div className="app-shell app-shell--player">
+        <div className="game-banner">
           <img
             src="/logo.svg"
             alt="Road Rush"
@@ -399,31 +398,13 @@ export function GameScreen() {
             Please return to Game HQ for the final results announcement.
           </p>
 
-          <div style={{ display: 'flex', gap: 24, marginBottom: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-green)' }}>{owned}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Streets owned</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 700 }}>{visited}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Streets visited</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-muted)' }}>{notVisited}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Streets not visited</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-green)' }}>{rentCollectedCount}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Times rent was collected</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-red)' }}>{rentPaidCount}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Times rent was paid</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--monopoly-green)' }}>{challengesCompletedCount}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Challenges completed</div>
-            </div>
+          <div className="metric-grid" style={{ marginBottom: 24 }}>
+            <div className="metric-card"><div className="metric-label">Streets owned</div><div className="metric-value" style={{ color: 'var(--primary)' }}>{owned}</div></div>
+            <div className="metric-card"><div className="metric-label">Streets visited</div><div className="metric-value">{visited}</div></div>
+            <div className="metric-card"><div className="metric-label">Streets not visited</div><div className="metric-value" style={{ color: 'var(--text-dim)' }}>{notVisited}</div></div>
+            <div className="metric-card"><div className="metric-label">Rent collected</div><div className="metric-value" style={{ color: 'var(--primary)' }}>{rentCollectedCount}</div></div>
+            <div className="metric-card"><div className="metric-label">Rent paid</div><div className="metric-value" style={{ color: 'var(--monopoly-red)' }}>{rentPaidCount}</div></div>
+            <div className="metric-card"><div className="metric-label">Challenges completed</div><div className="metric-value" style={{ color: 'var(--primary)' }}>{challengesCompletedCount}</div></div>
           </div>
 
           <p className="final-note">
@@ -442,7 +423,8 @@ export function GameScreen() {
   }
 
   // ACTIVE — main game view
-  const filteredStreets = game.streets.filter(s => {
+  const streets = game.streets || [];
+  const filteredStreets = streets.filter(s => {
     if (filter === 'all') return true;
     if (filter === 'owned') return s.ownedByPlayer;
     if (filter === 'unvisited') return s.visitStatus === 'unvisited';
@@ -451,8 +433,8 @@ export function GameScreen() {
   });
 
   const balance = parseFloat(game.balance);
-  const ownedCount = game.streets.filter(s => s.ownedByPlayer).length;
-  const visitedCount = game.streets.filter(s => s.visitStatus !== 'unvisited').length;
+  const ownedCount = streets.filter(s => s.ownedByPlayer).length;
+  const visitedCount = streets.filter(s => s.visitStatus !== 'unvisited').length;
   const sortedChallenges = [...challenges].sort((a, b) => {
     const rank = (challenge) => {
       const status = (challenge.status || '').toLowerCase().trim();
@@ -500,55 +482,41 @@ export function GameScreen() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, marginTop: 10, fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>
-          <span>🏠 {ownedCount} owned</span>
-          <span>👣 {visitedCount}/{game.streets.length} visited</span>
-          <span style={{ marginLeft: 'auto' }}>
-            Ends in {endCountdown || '—'}
-          </span>
+        <div className="card-meta player-stats-row" style={{ marginTop: 10, color: 'rgba(255,255,255,0.9)' }}>
+          <div className="player-stats-left">
+            <span>🏠 {ownedCount} owned</span>
+            <span>👣 {visitedCount}/{streets.length} visited</span>
+          </div>
+          <span className="player-stats-countdown">Ends in {endCountdown || '—'}</span>
         </div>
       </div>
 
       <div className="player-content">
         {challengeAnnouncement && (
-          <div style={{
-            marginBottom: 12,
-            background: 'var(--monopoly-green-light)',
-            color: 'var(--text)',
-            border: '1px solid var(--monopoly-green)',
-            borderRadius: 'var(--radius)',
-            padding: '10px 12px',
-            fontWeight: 700,
-            fontSize: 13
-          }}>
+          <div className="announcement-banner">
             {challengeAnnouncement}
           </div>
         )}
 
         <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 10 }}>Challenges</div>
+          <div className="section-eyebrow" style={{ marginBottom: 10 }}>Challenges</div>
           {challenges.length === 0 ? (
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No challenges are available for this event.</div>
+            <div className="muted" style={{ fontSize: 13 }}>No challenges are available for this event.</div>
           ) : (
-            <div style={{ display: 'grid', gap: 10 }}>
+            <div className="challenge-grid">
               {sortedChallenges.map(ch => {
                 const canSubmit = ch.status === 'active' && ch.submissionStatus === 'awaiting_submission';
                 const submitted = ch.submittedPhotoUrl;
                 return (
-                  <div key={ch.id} style={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-lg)',
-                    padding: 12
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'start' }}>
+                  <div key={ch.id} className="challenge-card">
+                    <div className="challenge-card__header">
                       <div>
                         <div style={{ fontWeight: 700 }}>{ch.description}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                        <div className="challenge-meta">
                           Prize £{parseFloat(ch.prizeAmount || 0).toFixed(0)} · {ch.durationMinutes} minutes
                         </div>
                         {ch.scheduledEndAt && ch.status === 'active' && (
-                          <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 4 }}>
+                          <div className="challenge-meta" style={{ color: 'var(--text-dim)' }}>
                             Ends {new Date(ch.scheduledEndAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         )}
@@ -567,7 +535,8 @@ export function GameScreen() {
                       <img
                         src={submitted}
                         alt="Submitted challenge"
-                        style={{ width: '100%', borderRadius: 8, marginTop: 10, maxHeight: 180, objectFit: 'cover' }}
+                        className="media-preview"
+                        style={{ maxHeight: 180 }}
                       />
                     )}
 
@@ -602,10 +571,10 @@ export function GameScreen() {
           {['all', 'unvisited', 'owned', 'visited'].map(f => (
             <button key={f} className={`filter-chip ${filter === f ? 'active' : ''}`}
               onClick={() => setFilter(f)}>
-              {f === 'all' ? `All (${game.streets.length})`
-                : f === 'unvisited' ? `Unvisited (${game.streets.filter(s => s.visitStatus === 'unvisited').length})`
+              {f === 'all' ? `All (${streets.length})`
+                : f === 'unvisited' ? `Unvisited (${streets.filter(s => s.visitStatus === 'unvisited').length})`
                 : f === 'owned' ? `Owned (${ownedCount})`
-                : `Visited (${game.streets.filter(s => s.visitStatus !== 'unvisited' && !s.ownedByPlayer).length})`}
+                : `Visited (${streets.filter(s => s.visitStatus !== 'unvisited' && !s.ownedByPlayer).length})`}
             </button>
           ))}
         </div>
@@ -680,7 +649,7 @@ export function GameScreen() {
         </div>
 
         {filteredStreets.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+          <div className="empty-state-card">
             No streets match this filter.
           </div>
         )}

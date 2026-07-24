@@ -42,6 +42,14 @@ public class GameService {
 
             validateAndBindDevice(ep, deviceToken);
 
+            if (ep.getAssignedGameId() != null) {
+                Game assignedGame = gameMapper.findById(ep.getAssignedGameId());
+                GamePlayer assignedGamePlayer = gamePlayerMapper.findByEventPlayerId(ep.getId());
+                if (assignedGame != null && assignedGamePlayer != null) {
+                    return buildPlayerGameView(assignedGame, assignedGamePlayer);
+                }
+            }
+
             PlayerGameView pendingView = new PlayerGameView();
             pendingView.setGameId(ep.getAssignedGameId());
             pendingView.setGameName(event.getName());
@@ -60,6 +68,12 @@ public class GameService {
         validateAndBindDevice(gp, deviceToken);
 
         Game game = gameMapper.findById(gp.getGameId());
+        return buildPlayerGameView(game, gp);
+    }
+
+    private PlayerGameView buildPlayerGameView(Game game, GamePlayer gp) {
+        if (game == null) throw new RuntimeException("Game not found");
+
         Event event = game.getEventId() == null ? null : eventMapper.findById(game.getEventId());
         List<GameStreet> gameStreets = gameStreetMapper.findByGameId(game.getId());
         List<StreetVisit> playerVisits = streetVisitMapper.findByGameAndPlayer(game.getId(), gp.getPlayerId());

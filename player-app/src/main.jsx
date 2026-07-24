@@ -7,7 +7,7 @@ import './styles.css';
 
 function Home() {
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--bg)' }}>
+    <div className="app-shell app-shell--player">
       <div className="app-brand-band">
         <img
           src="/logo.svg"
@@ -15,9 +15,10 @@ function Home() {
           style={{ height: 42, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' }}
         />
       </div>
-      <div className="center-screen" style={{ minHeight: 'calc(100dvh - 66px)' }}>
+      <a href="#app-main" className="skip-link">Skip to content</a>
+      <main id="app-main" tabIndex={-1} className="center-screen" style={{ minHeight: 'calc(100dvh - 66px)' }}>
         <p className="hero-sub">Use the link from your invitation email, then tap Join on the next screen.</p>
-      </div>
+      </main>
     </div>
   );
 }
@@ -25,12 +26,14 @@ function Home() {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/game/:joinToken" element={<JoinGamePage />} />
-        <Route path="/game/:joinToken/join" element={<JoinGamePage />} />
-        <Route path="/game/:joinToken/play" element={<GameScreen />} />
-      </Routes>
+      <div className="app-shell app-shell--player">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/game/:joinToken" element={<JoinGamePage />} />
+          <Route path="/game/:joinToken/join" element={<JoinGamePage />} />
+          <Route path="/game/:joinToken/play" element={<GameScreen />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }
