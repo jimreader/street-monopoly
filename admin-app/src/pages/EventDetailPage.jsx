@@ -7,9 +7,17 @@ export function EventDetailPage() {
   const [view, setView] = useState(null);
   const [players, setPlayers] = useState([]);
   const [games, setGames] = useState([]);
+  const [challenges, setChallenges] = useState([]);
   const [tab, setTab] = useState('players');
   const [showInvite, setShowInvite] = useState(false);
   const [inviteForm, setInviteForm] = useState({ name: '', email: '' });
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [challengeForm, setChallengeForm] = useState({ description: '', prizeAmount: '', durationMinutes: '' });
+  const [editingChallenge, setEditingChallenge] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewChallenge, setReviewChallenge] = useState(null);
+  const [challengeSubmissions, setChallengeSubmissions] = useState([]);
+  const [reviewingSubmissionId, setReviewingSubmissionId] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [deletingEvent, setDeletingEvent] = useState(false);
@@ -26,14 +34,16 @@ export function EventDetailPage() {
 
   async function loadData() {
     try {
-      const [eventView, eventPlayers, eventGames] = await Promise.all([
+      const [eventView, eventPlayers, eventGames, eventChallenges] = await Promise.all([
         api.getEventAdminView(id),
         api.getEventPlayers(id),
-        api.getEventGames(id)
+        api.getEventGames(id),
+        api.getEventChallenges(id)
       ]);
       setView(eventView);
       setPlayers(eventPlayers);
       setGames(eventGames);
+      setChallenges(eventChallenges);
     } catch (e) {
       setError(e.message);
     }
@@ -95,6 +105,98 @@ export function EventDetailPage() {
     }
   }
 
+  async function handleSaveChallenge(e) {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    const payload = {
+      description: challengeForm.description.trim(),
+      prizeAmount: Number(challengeForm.prizeAmount),
+      durationMinutes: Number(challengeForm.durationMinutes)
+    };
+
+    try {
+      if (editingChallenge) {
+        await api.updateEventChallenge(id, editingChallenge.id, payload);
+        setSuccess('Challenge updated.');
+      } else {
+        await api.createEventChallenge(id, payload);
+        setSuccess('Challenge added.');
+      }
+      setShowChallengeModal(false);
+      setEditingChallenge(null);
+      setChallengeForm({ description: '', prizeAmount: '', durationMinutes: '' });
+      await loadData();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  function openNewChallengeModal() {
+    setEditingChallenge(null);
+    setChallengeForm({ description: '', prizeAmount: '', durationMinutes: '' });
+    setShowChallengeModal(true);
+  }
+
+  function openEditChallengeModal(challenge) {
+    setEditingChallenge(challenge);
+    setChallengeForm({
+      description: challenge.description,
+      prizeAmount: String(challenge.prizeAmount),
+      durationMinutes: String(challenge.durationMinutes)
+    });
+    setShowChallengeModal(true);
+  }
+
+  async function handleDeleteChallenge(challenge) {
+    const confirmed = window.confirm('Delete this challenge?');
+    if (!confirmed) return;
+
+    setError('');
+    setSuccess('');
+    try {
+      await api.deleteEventChallenge(id, challenge.id);
+      setSuccess('Challenge deleted.');
+      await loadData();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function openReviewModal(challenge) {
+    setError('');
+    setSuccess('');
+    try {
+      const submissions = await api.getEventChallengeSubmissions(id, challenge.id);
+      setReviewChallenge(challenge);
+      setChallengeSubmissions(submissions);
+      setShowReviewModal(true);
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function handleReviewSubmission(submission, reviewStatus) {
+    setError('');
+    setSuccess('');
+    setReviewingSubmissionId(submission.submissionId);
+    try {
+      await api.reviewEventChallengeSubmission(id, reviewChallenge.id, submission.submissionId, {
+        reviewStatus,
+        reviewNotes: ''
+      });
+      const submissions = await api.getEventChallengeSubmissions(id, reviewChallenge.id);
+      setChallengeSubmissions(submissions);
+      setSuccess(`Submission marked as ${reviewStatus}.`);
+      await loadData();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setReviewingSubmissionId(null);
+    }
+  }
+
   function formatDate(iso) {
     if (!iso) return '—';
     return new Date(iso).toLocaleString('en-GB', {
@@ -141,6 +243,7 @@ export function EventDetailPage() {
 
       <div className="tabs">
         <button className={`tab ${tab === 'players' ? 'active' : ''}`} onClick={() => setTab('players')}>Players ({players.length})</button>
+        <button className={`tab ${tab === 'challenges' ? 'active' : ''}`} onClick={() => setTab('challenges')}>Challenges ({challenges.length})</button>
         <button className={`tab ${tab === 'leaderboard' ? 'active' : ''}`} onClick={() => setTab('leaderboard')}>Leaderboard</button>
         <button className={`tab ${tab === 'games' ? 'active' : ''}`} onClick={() => setTab('games')}>Generated Games ({games.length})</button>
       </div>
@@ -209,6 +312,72 @@ export function EventDetailPage() {
                           </div>
                         </td>
                       )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'challenges' && (
+        <div>
+          {view.status === 'pending' && (
+            <div style={{ marginBottom: 16 }}>
+              <button className="btn btn-primary btn-sm" onClick={openNewChallengeModal}>+ Add Challenge</button>
+            </div>
+          )}
+
+          {challenges.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">📸</div>
+              <p>No challenges configured yet.</p>
+            </div>
+          ) : (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Challenge</th>
+                    <th>Prize</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Schedule</th>
+                    <th>Submissions</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {challenges.map(ch => (
+                    <tr key={ch.id}>
+                      <td style={{ maxWidth: 360 }}>{ch.description}</td>
+                      <td>£{parseFloat(ch.prizeAmount || 0).toFixed(0)}</td>
+                      <td>{ch.durationMinutes}m</td>
+                      <td><span className={`badge badge-${ch.status}`}>{ch.status}</span></td>
+                      <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        {ch.scheduledStartAt ? `${formatDate(ch.scheduledStartAt)} - ${formatDate(ch.scheduledEndAt)}` : 'Randomized on event start'}
+                      </td>
+                      <td style={{ fontSize: 12 }}>
+                        {ch.submittedCount} total · {ch.pendingReviewCount} pending review · {ch.accomplishedCount} accomplished
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                          <button className="btn btn-secondary btn-sm" onClick={() => openReviewModal(ch)}>
+                            Review
+                          </button>
+                          {view.status === 'pending' && ch.status === 'pending' && (
+                            <>
+                              <button className="btn btn-secondary btn-sm" onClick={() => openEditChallengeModal(ch)}>
+                                Edit
+                              </button>
+                              <button className="btn btn-danger btn-sm" onClick={() => handleDeleteChallenge(ch)}>
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -300,6 +469,125 @@ export function EventDetailPage() {
                 <button type="submit" className="btn btn-primary">Add Player</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showChallengeModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowChallengeModal(false)}>
+          <div className="modal">
+            <h2 className="modal-title">{editingChallenge ? 'Edit Challenge' : 'Add Challenge'}</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 20 }}>
+              Challenge timings are randomized automatically when the event starts.
+            </p>
+            <form onSubmit={handleSaveChallenge}>
+              <div className="form-group">
+                <label className="form-label">Challenge</label>
+                <input
+                  className="form-input"
+                  value={challengeForm.description}
+                  onChange={e => setChallengeForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="e.g. Send a photo where your feet are off the ground"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Prize Amount (£)</label>
+                <input
+                  className="form-input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={challengeForm.prizeAmount}
+                  onChange={e => setChallengeForm(f => ({ ...f, prizeAmount: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Duration (minutes)</label>
+                <input
+                  className="form-input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={challengeForm.durationMinutes}
+                  onChange={e => setChallengeForm(f => ({ ...f, durationMinutes: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowChallengeModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">{editingChallenge ? 'Save Changes' : 'Add Challenge'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showReviewModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowReviewModal(false)}>
+          <div className="modal" style={{ maxWidth: 900, width: '95vw' }}>
+            <h2 className="modal-title">Review Challenge Submissions</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 12 }}>
+              {reviewChallenge?.description}
+            </p>
+
+            {challengeSubmissions.length === 0 ? (
+              <div className="empty-state" style={{ marginBottom: 16 }}>
+                <p>No submissions yet.</p>
+              </div>
+            ) : (
+              <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                {challengeSubmissions.map(sub => (
+                  <div key={sub.submissionId} className="card" style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start' }}>
+                      <div>
+                        <div style={{ fontWeight: 700 }}>{sub.playerName}</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>{sub.playerEmail}</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 6 }}>
+                          Submitted: {formatDate(sub.submittedAt)}
+                        </div>
+                        <div style={{ marginTop: 6 }}>
+                          <span className={`badge badge-${sub.reviewStatus === 'accomplished' ? 'active' : sub.reviewStatus === 'failed' ? 'completed' : 'pending'}`}>
+                            {sub.reviewStatus}
+                          </span>
+                        </div>
+                      </div>
+                      <a className="btn btn-secondary btn-sm" href={sub.photoUrl} target="_blank" rel="noreferrer">Open Photo</a>
+                    </div>
+
+                    {sub.photoUrl && (
+                      <img src={sub.photoUrl} alt="Challenge submission" style={{ width: '100%', borderRadius: 8, marginTop: 12, maxHeight: 280, objectFit: 'cover' }} />
+                    )}
+
+                    {sub.reviewStatus === 'pending' && view.status === 'active' && (
+                      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleReviewSubmission(sub, 'accomplished')}
+                          disabled={reviewingSubmissionId === sub.submissionId}
+                        >
+                          Mark Accomplished (+£{parseFloat(reviewChallenge?.prizeAmount || 0).toFixed(0)})
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleReviewSubmission(sub, 'failed')}
+                          disabled={reviewingSubmissionId === sub.submissionId}
+                        >
+                          Mark Failed
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => setShowReviewModal(false)}>Close</button>
+            </div>
           </div>
         </div>
       )}

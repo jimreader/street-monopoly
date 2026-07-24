@@ -42,4 +42,20 @@ public class PlayerController {
             @Valid @RequestBody CheckInRequest request) {
         return gameService.checkIn(joinToken, deviceToken, request);
     }
+
+    @GetMapping("/game/{joinToken}/challenges")
+    public java.util.List<PlayerChallengeView> getChallenges(
+            @PathVariable UUID joinToken,
+            @RequestHeader(value = "X-Device-Token", required = false) String deviceToken) {
+        return gameService.getPlayerChallenges(joinToken, deviceToken);
+    }
+
+    @PostMapping("/game/{joinToken}/challenges/{challengeId}/submit")
+    public void submitChallenge(
+            @PathVariable UUID joinToken,
+            @PathVariable UUID challengeId,
+            @RequestHeader(value = "X-Device-Token", required = false) String deviceToken,
+            @Valid @RequestBody ChallengeSubmissionRequest request) {
+        gameService.submitChallenge(joinToken, deviceToken, challengeId, request);
+    }
 }

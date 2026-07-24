@@ -30,6 +30,9 @@ public interface EventPlayerMapper {
     @Select("SELECT * FROM event_player WHERE id = #{id} AND event_id = #{eventId} AND deleted_at IS NULL")
     EventPlayer findByEventAndId(@Param("eventId") UUID eventId, @Param("id") UUID id);
 
+        @Select("SELECT * FROM event_player WHERE id = #{id} AND deleted_at IS NULL")
+        EventPlayer findById(UUID id);
+
     @Select("SELECT * FROM event_player WHERE event_id = #{eventId} AND player_id = #{playerId} AND deleted_at IS NULL")
     EventPlayer findByEventAndPlayer(@Param("eventId") UUID eventId, @Param("playerId") UUID playerId);
 

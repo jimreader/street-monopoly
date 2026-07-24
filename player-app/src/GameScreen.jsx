@@ -65,23 +65,33 @@ function RentIncomeList({ rentCollections }) {
 export function GameScreen() {
   const { joinToken } = useParams();
   const [game, setGame] = useState(null);
+  const [challenges, setChallenges] = useState([]);
+  const [challengeAnnouncement, setChallengeAnnouncement] = useState('');
   const [error, setError] = useState('');
   const [gpsPos, setGpsPos] = useState(null);
   const [gpsError, setGpsError] = useState(false);
   const [checkingIn, setCheckingIn] = useState(null);
   const [toast, setToast] = useState(null);
+  const [uploadingChallengeId, setUploadingChallengeId] = useState(null);
   const [filter, setFilter] = useState('all');
   const [expandedStreetId, setExpandedStreetId] = useState(null);
   const [countdown, setCountdown] = useState('');
   const [endCountdown, setEndCountdown] = useState('');
   const watchRef = useRef(null);
   const toastTimer = useRef(null);
+  const announcementTimer = useRef(null);
+  const previousChallengeStatuses = useRef(new Map());
+  const challengeStatusesInitialized = useRef(false);
 
   // Load game data
   const loadGame = useCallback(async () => {
     try {
-      const data = await api.getGameView(joinToken);
-      setGame(data);
+      const [gameData, challengeData] = await Promise.all([
+        api.getGameView(joinToken),
+        api.getChallenges(joinToken),
+      ]);
+      setGame(gameData);
+      setChallenges(challengeData || []);
     } catch (e) {
       setError(e.message);
     }
@@ -91,9 +101,11 @@ export function GameScreen() {
 
   // Poll for updates
   useEffect(() => {
-    const interval = setInterval(loadGame, 10000);
+    if (game?.status === 'completed') return;
+    const intervalMs = 10000;
+    const interval = setInterval(loadGame, intervalMs);
     return () => clearInterval(interval);
-  }, [loadGame]);
+  }, [loadGame, game?.status]);
 
   // GPS tracking
   useEffect(() => {
@@ -182,6 +194,47 @@ export function GameScreen() {
     toastTimer.current = setTimeout(() => setToast(null), 4000);
   }
 
+  function announceNewChallenges(newlyActiveChallenges) {
+    if (!newlyActiveChallenges || newlyActiveChallenges.length === 0) return;
+
+    const message = newlyActiveChallenges.length === 1
+      ? `New challenge available: ${newlyActiveChallenges[0].description}`
+      : `${newlyActiveChallenges.length} new challenges are now available.`;
+
+    setChallengeAnnouncement(message);
+    if (announcementTimer.current) clearTimeout(announcementTimer.current);
+    announcementTimer.current = setTimeout(() => setChallengeAnnouncement(''), 12000);
+
+    showToast(message, 'success');
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+        navigator.vibrate(200);
+      }
+    } catch {
+      // Ignore unsupported vibration API errors on some browsers/devices.
+    }
+  }
+
+  useEffect(() => {
+    const nextStatuses = new Map(challenges.map(ch => [ch.id, ch.status]));
+
+    if (challengeStatusesInitialized.current) {
+      const newlyActive = challenges.filter(ch => {
+        const previous = previousChallengeStatuses.current.get(ch.id);
+        return ch.status === 'active' && previous !== 'active' && ch.submissionStatus === 'awaiting_submission';
+      });
+      announceNewChallenges(newlyActive);
+    }
+
+    previousChallengeStatuses.current = nextStatuses;
+    challengeStatusesInitialized.current = true;
+  }, [challenges]);
+
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    if (announcementTimer.current) clearTimeout(announcementTimer.current);
+  }, []);
+
   function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371000;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -218,6 +271,38 @@ export function GameScreen() {
       showToast(e.message, 'error');
     } finally {
       setCheckingIn(null);
+    }
+  }
+
+  async function handleChallengePhotoSelected(challenge, file) {
+    if (!file) return;
+    setUploadingChallengeId(challenge.id);
+    try {
+      const upload = await api.uploadChallengePhoto(file);
+      await api.submitChallenge(joinToken, challenge.id, { photoUrl: upload.url });
+      showToast('Challenge photo submitted for review.', 'success');
+      await loadGame();
+    } catch (e) {
+      showToast(e.message, 'error');
+    } finally {
+      setUploadingChallengeId(null);
+    }
+  }
+
+  function challengeStatusLabel(challenge) {
+    switch (challenge.submissionStatus) {
+      case 'awaiting_submission':
+        return 'Awaiting your photo';
+      case 'submitted_pending_review':
+        return 'Submitted - pending review';
+      case 'submitted_accomplished':
+        return 'Accomplished';
+      case 'submitted_failed':
+        return 'Failed';
+      case 'missed':
+        return 'Missed';
+      default:
+        return 'Not open yet';
     }
   }
 
@@ -363,6 +448,7 @@ export function GameScreen() {
   const balance = parseFloat(game.balance);
   const ownedCount = game.streets.filter(s => s.ownedByPlayer).length;
   const visitedCount = game.streets.filter(s => s.visitStatus !== 'unvisited').length;
+  const activeChallenges = challenges.filter(c => c.status === 'active');
 
   return (
     <div>
@@ -398,6 +484,94 @@ export function GameScreen() {
       </div>
 
       <div className="player-content">
+        {challengeAnnouncement && (
+          <div style={{
+            marginBottom: 12,
+            background: 'var(--monopoly-green-light)',
+            color: 'var(--text)',
+            border: '1px solid var(--monopoly-green)',
+            borderRadius: 'var(--radius)',
+            padding: '10px 12px',
+            fontWeight: 700,
+            fontSize: 13
+          }}>
+            {challengeAnnouncement}
+          </div>
+        )}
+
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 10 }}>Challenges</div>
+          {challenges.length === 0 ? (
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No challenges are available for this event.</div>
+          ) : (
+            <div style={{ display: 'grid', gap: 10 }}>
+              {challenges.map(ch => {
+                const canSubmit = ch.status === 'active' && ch.submissionStatus === 'awaiting_submission';
+                const submitted = ch.submittedPhotoUrl;
+                return (
+                  <div key={ch.id} style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: 12
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'start' }}>
+                      <div>
+                        <div style={{ fontWeight: 700 }}>{ch.description}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                          Prize £{parseFloat(ch.prizeAmount || 0).toFixed(0)} · {ch.durationMinutes} minutes
+                        </div>
+                        {ch.scheduledEndAt && ch.status === 'active' && (
+                          <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 4 }}>
+                            Ends {new Date(ch.scheduledEndAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        )}
+                      </div>
+                      <span className={`street-status-badge ${
+                        ch.submissionStatus === 'submitted_accomplished' ? 'badge-owned' :
+                        ch.submissionStatus === 'submitted_failed' ? 'badge-visited-rent' :
+                        ch.submissionStatus === 'awaiting_submission' ? 'badge-unvisited' :
+                        'badge-visited-no-funds'
+                      }`}>
+                        {challengeStatusLabel(ch)}
+                      </span>
+                    </div>
+
+                    {submitted && (
+                      <img
+                        src={submitted}
+                        alt="Submitted challenge"
+                        style={{ width: '100%', borderRadius: 8, marginTop: 10, maxHeight: 180, objectFit: 'cover' }}
+                      />
+                    )}
+
+                    {canSubmit && (
+                      <div style={{ marginTop: 10 }}>
+                        <label className="checkin-btn" style={{ display: 'inline-block', cursor: 'pointer', margin: 0 }}>
+                          {uploadingChallengeId === ch.id ? 'Uploading...' : 'Submit Photo'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            style={{ display: 'none' }}
+                            disabled={uploadingChallengeId === ch.id}
+                            onChange={(e) => handleChallengePhotoSelected(ch, e.target.files?.[0])}
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {activeChallenges.length > 1 && (
+            <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-dim)' }}>
+              Multiple active challenges are currently available.
+            </div>
+          )}
+        </div>
+
         <div className="filter-bar">
           {['all', 'unvisited', 'owned', 'visited'].map(f => (
             <button key={f} className={`filter-chip ${filter === f ? 'active' : ''}`}

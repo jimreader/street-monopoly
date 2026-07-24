@@ -44,12 +44,13 @@ public class SecurityConfig {
                 .requestMatchers("/api/player/**").permitAll()
                 // Serve uploaded images publicly (player app needs them)
                 .requestMatchers(HttpMethod.GET, "/api/images/**").permitAll()
+                // Allow player challenge photo uploads
+                .requestMatchers(HttpMethod.POST, "/api/images/upload").permitAll()
                 // Allow preflight CORS requests
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // All admin endpoints require authentication
                 .requestMatchers("/api/maps/**").authenticated()
                 .requestMatchers("/api/games/**").authenticated()
-                .requestMatchers("/api/images/upload").authenticated()
                 // Everything else requires auth
                 .anyRequest().authenticated()
             )

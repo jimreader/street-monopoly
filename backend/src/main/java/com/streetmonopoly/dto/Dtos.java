@@ -57,6 +57,84 @@ public class Dtos {
         @NotBlank @Email private String email;
     }
 
+    // ---- Challenges ----
+    @Data
+    public static class CreateChallengeRequest {
+        @NotBlank private String description;
+        @NotNull @Positive private BigDecimal prizeAmount;
+        @NotNull @Min(1) private Integer durationMinutes;
+    }
+
+    @Data
+    public static class UpdateChallengeRequest {
+        @NotBlank private String description;
+        @NotNull @Positive private BigDecimal prizeAmount;
+        @NotNull @Min(1) private Integer durationMinutes;
+    }
+
+    @Data
+    public static class ChallengeSubmissionRequest {
+        @NotBlank private String photoUrl;
+    }
+
+    @Data
+    public static class ReviewChallengeSubmissionRequest {
+        @NotBlank
+        @Pattern(regexp = "accomplished|failed", message = "reviewStatus must be accomplished or failed")
+        private String reviewStatus;
+        private String reviewNotes;
+    }
+
+    @Data
+    public static class ChallengeAdminView {
+        private UUID id;
+        private UUID eventId;
+        private String description;
+        private BigDecimal prizeAmount;
+        private int durationMinutes;
+        private LocalDateTime scheduledStartAt;
+        private LocalDateTime scheduledEndAt;
+        private String status;
+        private int submittedCount;
+        private int accomplishedCount;
+        private int failedCount;
+        private int pendingReviewCount;
+        private LocalDateTime createdAt;
+    }
+
+    @Data
+    public static class ChallengeSubmissionAdminView {
+        private UUID submissionId;
+        private UUID challengeId;
+        private UUID eventPlayerId;
+        private UUID playerId;
+        private String playerName;
+        private String playerEmail;
+        private String photoUrl;
+        private LocalDateTime submittedAt;
+        private String reviewStatus;
+        private String reviewNotes;
+        private LocalDateTime reviewedAt;
+        private BigDecimal prizeAwardedAmount;
+    }
+
+    @Data
+    public static class PlayerChallengeView {
+        private UUID id;
+        private String description;
+        private BigDecimal prizeAmount;
+        private int durationMinutes;
+        private LocalDateTime scheduledStartAt;
+        private LocalDateTime scheduledEndAt;
+        private String status;
+        private String submissionStatus;
+        private String submittedPhotoUrl;
+        private LocalDateTime submittedAt;
+        private String reviewStatus;
+        private String reviewNotes;
+        private LocalDateTime reviewedAt;
+    }
+
     // ---- Check-in ----
     @Data
     public static class CheckInRequest {

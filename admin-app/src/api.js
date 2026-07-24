@@ -60,6 +60,13 @@ export const api = {
   getEventPlayers: (eventId) => request(`/events/${eventId}/players`),
   getEventGames: (eventId) => request(`/events/${eventId}/games`),
   getEventAdminView: (eventId) => request(`/events/${eventId}/admin-view`),
+  getEventChallenges: (eventId) => request(`/events/${eventId}/challenges`),
+  createEventChallenge: (eventId, data) => request(`/events/${eventId}/challenges`, { method: 'POST', body: JSON.stringify(data) }),
+  updateEventChallenge: (eventId, challengeId, data) => request(`/events/${eventId}/challenges/${challengeId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteEventChallenge: (eventId, challengeId) => request(`/events/${eventId}/challenges/${challengeId}`, { method: 'DELETE' }),
+  getEventChallengeSubmissions: (eventId, challengeId) => request(`/events/${eventId}/challenges/${challengeId}/submissions`),
+  reviewEventChallengeSubmission: (eventId, challengeId, submissionId, data) =>
+    request(`/events/${eventId}/challenges/${challengeId}/submissions/${submissionId}/review`, { method: 'POST', body: JSON.stringify(data) }),
   deleteEvent: (eventId) => request(`/events/${eventId}`, { method: 'DELETE' }),
   deleteEventPlayer: (eventId, eventPlayerId) => request(`/events/${eventId}/players/${eventPlayerId}`, { method: 'DELETE' }),
   resetEventPlayerDevice: (eventId, eventPlayerId) =>

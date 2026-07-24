@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -16,6 +17,8 @@ public class GameService {
     @Autowired private GameMapper gameMapper;
     @Autowired private EventMapper eventMapper;
     @Autowired private EventPlayerMapper eventPlayerMapper;
+    @Autowired private EventChallengeMapper eventChallengeMapper;
+    @Autowired private EventChallengeSubmissionMapper eventChallengeSubmissionMapper;
     @Autowired private GameMapMapper gameMapMapper;
     @Autowired private GamePlayerMapper gamePlayerMapper;
     @Autowired private GameStreetMapper gameStreetMapper;
@@ -139,6 +142,50 @@ public class GameService {
         summary.setStartTime(event.getStartTime());
         summary.setEndTime(event.getEndTime());
         return summary;
+    }
+
+    public List<PlayerChallengeView> getPlayerChallenges(UUID joinToken, String deviceToken) {
+        PlayerContext context = resolvePlayerContext(joinToken, deviceToken);
+        return eventChallengeMapper.findPlayerViews(context.event.getId(), context.eventPlayer.getId());
+    }
+
+    @Transactional
+    public void submitChallenge(UUID joinToken, String deviceToken, UUID challengeId, ChallengeSubmissionRequest request) {
+        PlayerContext context = resolvePlayerContext(joinToken, deviceToken);
+        if (context.gamePlayer == null) {
+            throw new RuntimeException("This event has not assigned you to a game yet.");
+        }
+
+        if (!"active".equals(context.event.getStatus())) {
+            throw new RuntimeException("Challenges can only be submitted while the event is active");
+        }
+
+        EventChallenge challenge = eventChallengeMapper.findByEventAndId(context.event.getId(), challengeId);
+        if (challenge == null) throw new RuntimeException("Challenge not found");
+        if (!"active".equals(challenge.getStatus())) {
+            throw new RuntimeException("This challenge is not currently active");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (challenge.getScheduledStartAt() == null || challenge.getScheduledEndAt() == null ||
+                now.isBefore(challenge.getScheduledStartAt()) || now.isAfter(challenge.getScheduledEndAt())) {
+            throw new RuntimeException("This challenge is outside its submission window");
+        }
+
+        EventChallengeSubmission existing = eventChallengeSubmissionMapper.findByChallengeAndEventPlayer(
+                challengeId,
+                context.eventPlayer.getId()
+        );
+        if (existing != null) {
+            throw new RuntimeException("You have already submitted a photo for this challenge");
+        }
+
+        EventChallengeSubmission submission = new EventChallengeSubmission();
+        submission.setId(UUID.randomUUID());
+        submission.setChallengeId(challengeId);
+        submission.setEventPlayerId(context.eventPlayer.getId());
+        submission.setPhotoUrl(request.getPhotoUrl().trim());
+        eventChallengeSubmissionMapper.insert(submission);
     }
 
     @Transactional
@@ -453,5 +500,48 @@ public class GameService {
             }
         }
         return collections;
+    }
+
+    private PlayerContext resolvePlayerContext(UUID joinToken, String deviceToken) {
+        GamePlayer gp = gamePlayerMapper.findByJoinToken(joinToken);
+        if (gp != null) {
+            validateAndBindDevice(gp, deviceToken);
+            Game game = gameMapper.findById(gp.getGameId());
+            if (game == null || game.getEventId() == null) {
+                throw new RuntimeException("Event not found");
+            }
+
+            Event event = eventMapper.findById(game.getEventId());
+            if (event == null) throw new RuntimeException("Event not found");
+
+            EventPlayer ep = eventPlayerMapper.findById(gp.getEventPlayerId());
+            if (ep == null) throw new RuntimeException("Event player not found");
+
+            PlayerContext context = new PlayerContext();
+            context.gamePlayer = gp;
+            context.eventPlayer = ep;
+            context.event = event;
+            return context;
+        }
+
+        EventPlayer ep = eventPlayerMapper.findByJoinToken(joinToken);
+        if (ep == null) throw new RuntimeException("Invalid join token");
+
+        validateAndBindDevice(ep, deviceToken);
+
+        Event event = eventMapper.findById(ep.getEventId());
+        if (event == null) throw new RuntimeException("Event not found");
+
+        PlayerContext context = new PlayerContext();
+        context.gamePlayer = null;
+        context.eventPlayer = ep;
+        context.event = event;
+        return context;
+    }
+
+    private static class PlayerContext {
+        private GamePlayer gamePlayer;
+        private EventPlayer eventPlayer;
+        private Event event;
     }
 }

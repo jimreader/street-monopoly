@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -16,6 +18,8 @@ public class EventService {
 
     @Autowired private EventMapper eventMapper;
     @Autowired private EventPlayerMapper eventPlayerMapper;
+    @Autowired private EventChallengeMapper eventChallengeMapper;
+    @Autowired private EventChallengeSubmissionMapper eventChallengeSubmissionMapper;
     @Autowired private GameMapper gameMapper;
     @Autowired private GameMapMapper gameMapMapper;
     @Autowired private GamePlayerMapper gamePlayerMapper;
@@ -127,6 +131,112 @@ public class EventService {
     public List<Game> getEventGames(UUID eventId) {
         getEvent(eventId);
         return gameMapper.findByEventId(eventId);
+    }
+
+    public List<ChallengeAdminView> getEventChallenges(UUID eventId) {
+        getEvent(eventId);
+        return eventChallengeMapper.findAdminViewsByEventId(eventId);
+    }
+
+    @Transactional
+    public EventChallenge createChallenge(UUID eventId, CreateChallengeRequest request) {
+        Event event = getEvent(eventId);
+        validateChallengeEditableWindow(event);
+
+        int totalDurationMinutes = eventChallengeMapper.sumDurationsByEvent(eventId) + request.getDurationMinutes();
+        validateChallengeDurationsFitEvent(event, totalDurationMinutes);
+
+        EventChallenge challenge = new EventChallenge();
+        challenge.setId(UUID.randomUUID());
+        challenge.setEventId(eventId);
+        challenge.setDescription(request.getDescription().trim());
+        challenge.setPrizeAmount(request.getPrizeAmount());
+        challenge.setDurationMinutes(request.getDurationMinutes());
+        challenge.setStatus("pending");
+        eventChallengeMapper.insert(challenge);
+        return eventChallengeMapper.findByEventAndId(eventId, challenge.getId());
+    }
+
+    @Transactional
+    public EventChallenge updateChallenge(UUID eventId, UUID challengeId, UpdateChallengeRequest request) {
+        Event event = getEvent(eventId);
+        validateChallengeEditableWindow(event);
+
+        EventChallenge existing = eventChallengeMapper.findByEventAndId(eventId, challengeId);
+        if (existing == null) throw new RuntimeException("Challenge not found");
+        if (!"pending".equals(existing.getStatus())) {
+            throw new RuntimeException("Only pending challenges can be edited");
+        }
+
+        int totalDurationMinutes = eventChallengeMapper.sumDurationsByEventExcluding(eventId, challengeId) + request.getDurationMinutes();
+        validateChallengeDurationsFitEvent(event, totalDurationMinutes);
+
+        existing.setDescription(request.getDescription().trim());
+        existing.setPrizeAmount(request.getPrizeAmount());
+        existing.setDurationMinutes(request.getDurationMinutes());
+        int updated = eventChallengeMapper.updateDraft(existing);
+        if (updated == 0) throw new RuntimeException("Challenge not found");
+        return eventChallengeMapper.findByEventAndId(eventId, challengeId);
+    }
+
+    @Transactional
+    public void deleteChallenge(UUID eventId, UUID challengeId) {
+        Event event = getEvent(eventId);
+        validateChallengeEditableWindow(event);
+
+        EventChallenge existing = eventChallengeMapper.findByEventAndId(eventId, challengeId);
+        if (existing == null) throw new RuntimeException("Challenge not found");
+        if (!"pending".equals(existing.getStatus())) {
+            throw new RuntimeException("Only pending challenges can be deleted");
+        }
+
+        int updated = eventChallengeMapper.softDelete(eventId, challengeId);
+        if (updated == 0) throw new RuntimeException("Challenge not found");
+    }
+
+    public List<ChallengeSubmissionAdminView> getChallengeSubmissions(UUID eventId, UUID challengeId) {
+        getEvent(eventId);
+        EventChallenge challenge = eventChallengeMapper.findByEventAndId(eventId, challengeId);
+        if (challenge == null) throw new RuntimeException("Challenge not found");
+        return eventChallengeSubmissionMapper.findAdminSubmissions(eventId, challengeId);
+    }
+
+    @Transactional
+    public void reviewChallengeSubmission(UUID eventId,
+                                          UUID challengeId,
+                                          UUID submissionId,
+                                          ReviewChallengeSubmissionRequest request) {
+        Event event = getEvent(eventId);
+        if (!"active".equals(event.getStatus())) {
+            throw new RuntimeException("Challenge submissions can only be reviewed while the event is active");
+        }
+
+        EventChallenge challenge = eventChallengeMapper.findByEventAndId(eventId, challengeId);
+        if (challenge == null) throw new RuntimeException("Challenge not found");
+
+        EventChallengeSubmission submission = eventChallengeSubmissionMapper.findInEvent(eventId, challengeId, submissionId);
+        if (submission == null) throw new RuntimeException("Submission not found");
+        if (!"pending".equals(submission.getReviewStatus())) {
+            throw new RuntimeException("Submission has already been reviewed");
+        }
+
+        BigDecimal prizeAward = BigDecimal.ZERO;
+        if ("accomplished".equals(request.getReviewStatus())) {
+            GamePlayer gp = gamePlayerMapper.findByEventPlayerId(submission.getEventPlayerId());
+            if (gp == null) throw new RuntimeException("Player is not assigned to a game");
+
+            BigDecimal newBalance = gp.getBalance().add(challenge.getPrizeAmount());
+            gamePlayerMapper.updateBalance(gp.getId(), newBalance);
+            prizeAward = challenge.getPrizeAmount();
+        }
+
+        eventChallengeSubmissionMapper.review(
+                submission.getId(),
+                request.getReviewStatus(),
+                request.getReviewNotes(),
+                LocalDateTime.now(),
+                prizeAward
+        );
     }
 
     public AdminEventView getAdminEventView(UUID eventId) {
@@ -290,7 +400,7 @@ public class EventService {
         }
     }
 
-    @Scheduled(fixedRate = 15000)
+    @Scheduled(fixedRateString = "${app.events.status-update-ms:3000}")
     @Transactional
     public void updateEventStatuses() {
         List<Event> toStart = eventMapper.findPendingReadyToStart();
@@ -302,6 +412,8 @@ public class EventService {
         for (Event event : toComplete) {
             completeEvent(event);
         }
+
+        updateChallengeStatuses();
     }
 
     @Transactional
@@ -366,6 +478,8 @@ public class EventService {
             }
         }
 
+        scheduleEventChallenges(event);
+
         eventMapper.updateStatus(event.getId(), "active");
     }
 
@@ -378,6 +492,104 @@ public class EventService {
             gameService.completeGame(game);
         }
 
+        List<EventChallenge> challenges = eventChallengeMapper.findByEventId(event.getId());
+        for (EventChallenge challenge : challenges) {
+            if (!"completed".equals(challenge.getStatus())) {
+                eventChallengeMapper.updateStatus(challenge.getId(), "completed");
+            }
+        }
+
         eventMapper.updateStatus(event.getId(), "completed");
+    }
+
+    private void validateChallengeEditableWindow(Event event) {
+        if (!"pending".equals(event.getStatus())) {
+            throw new RuntimeException("Challenges can only be managed while an event is pending");
+        }
+        if (!LocalDateTime.now().isBefore(event.getStartTime())) {
+            throw new RuntimeException("Challenges can only be managed before the event starts");
+        }
+    }
+
+    private void validateChallengeDurationsFitEvent(Event event, int totalDurationMinutes) {
+        long eventWindowSeconds = Duration.between(event.getStartTime(), event.getEndTime()).getSeconds();
+        long challengeWindowSeconds = totalDurationMinutes * 60L;
+        if (challengeWindowSeconds > eventWindowSeconds) {
+            throw new RuntimeException("Total challenge durations exceed the event duration");
+        }
+    }
+
+    private void scheduleEventChallenges(Event event) {
+        List<EventChallenge> challenges = eventChallengeMapper.findByEventId(event.getId());
+        if (challenges.isEmpty()) return;
+
+        long eventWindowSeconds = Duration.between(event.getStartTime(), event.getEndTime()).getSeconds();
+        long challengeSeconds = 0;
+        for (EventChallenge challenge : challenges) {
+            challengeSeconds += challenge.getDurationMinutes() * 60L;
+        }
+
+        if (challengeSeconds > eventWindowSeconds) {
+            throw new RuntimeException("Configured challenge durations exceed the event duration");
+        }
+
+        List<EventChallenge> shuffled = new ArrayList<>(challenges);
+        Collections.shuffle(shuffled);
+
+        long slackSeconds = eventWindowSeconds - challengeSeconds;
+        long[] gaps = distributeRandomGapSeconds(slackSeconds, shuffled.size() + 1);
+
+        LocalDateTime cursor = event.getStartTime().plusSeconds(gaps[0]);
+        for (int i = 0; i < shuffled.size(); i++) {
+            EventChallenge challenge = shuffled.get(i);
+            LocalDateTime startAt = cursor;
+            LocalDateTime endAt = startAt.plusMinutes(challenge.getDurationMinutes());
+            eventChallengeMapper.setSchedule(challenge.getId(), startAt, endAt);
+            eventChallengeMapper.updateStatus(challenge.getId(), "pending");
+            cursor = endAt.plusSeconds(gaps[i + 1]);
+        }
+    }
+
+    private long[] distributeRandomGapSeconds(long slackSeconds, int bucketCount) {
+        long[] gaps = new long[bucketCount];
+        if (slackSeconds <= 0 || bucketCount <= 0) return gaps;
+
+        Random random = new Random();
+        double[] weights = new double[bucketCount];
+        double totalWeight = 0;
+        for (int i = 0; i < bucketCount; i++) {
+            weights[i] = random.nextDouble();
+            totalWeight += weights[i];
+        }
+
+        long assigned = 0;
+        for (int i = 0; i < bucketCount; i++) {
+            long value = (long) Math.floor((weights[i] / totalWeight) * slackSeconds);
+            gaps[i] = value;
+            assigned += value;
+        }
+
+        long remainder = slackSeconds - assigned;
+        for (int i = 0; i < remainder; i++) {
+            int index = random.nextInt(bucketCount);
+            gaps[index] += 1;
+        }
+
+        return gaps;
+    }
+
+    private void updateChallengeStatuses() {
+        List<EventChallenge> toActivate = eventChallengeMapper.findPendingReadyToActivate();
+        for (EventChallenge challenge : toActivate) {
+            Event event = eventMapper.findById(challenge.getEventId());
+            if (event != null && "active".equals(event.getStatus())) {
+                eventChallengeMapper.updateStatus(challenge.getId(), "active");
+            }
+        }
+
+        List<EventChallenge> toComplete = eventChallengeMapper.findActiveReadyToComplete();
+        for (EventChallenge challenge : toComplete) {
+            eventChallengeMapper.updateStatus(challenge.getId(), "completed");
+        }
     }
 }

@@ -39,8 +39,26 @@ async function request(url, options = {}) {
 export const api = {
   getJoinSummary: (joinToken) => request(`/game/${joinToken}/summary`),
   getGameView: (joinToken) => request(`/game/${joinToken}`),
+  getChallenges: (joinToken) => request(`/game/${joinToken}/challenges`),
+  submitChallenge: (joinToken, challengeId, data) => request(`/game/${joinToken}/challenges/${challengeId}/submit`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
   checkIn: (joinToken, data) => request(`/game/${joinToken}/checkin`, {
     method: 'POST',
     body: JSON.stringify(data)
   }),
+  uploadChallengePhoto: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('/api/images/upload', {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Upload failed');
+    }
+    return res.json();
+  },
 };

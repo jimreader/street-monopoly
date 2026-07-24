@@ -2,6 +2,7 @@ package com.streetmonopoly.controller;
 
 import com.streetmonopoly.dto.Dtos.*;
 import com.streetmonopoly.model.Event;
+import com.streetmonopoly.model.EventChallenge;
 import com.streetmonopoly.model.EventPlayer;
 import com.streetmonopoly.model.Game;
 import com.streetmonopoly.service.EventService;
@@ -53,6 +54,49 @@ public class EventController {
     @GetMapping("/{eventId}/admin-view")
     public AdminEventView getAdminView(@PathVariable UUID eventId) {
         return eventService.getAdminEventView(eventId);
+    }
+
+    @GetMapping("/{eventId}/challenges")
+    public List<ChallengeAdminView> getChallenges(@PathVariable UUID eventId) {
+        return eventService.getEventChallenges(eventId);
+    }
+
+    @PostMapping("/{eventId}/challenges")
+    public EventChallenge createChallenge(@PathVariable UUID eventId, @Valid @RequestBody CreateChallengeRequest request) {
+        return eventService.createChallenge(eventId, request);
+    }
+
+    @PutMapping("/{eventId}/challenges/{challengeId}")
+    public EventChallenge updateChallenge(
+            @PathVariable UUID eventId,
+            @PathVariable UUID challengeId,
+            @Valid @RequestBody UpdateChallengeRequest request) {
+        return eventService.updateChallenge(eventId, challengeId, request);
+    }
+
+    @DeleteMapping("/{eventId}/challenges/{challengeId}")
+    public ResponseEntity<Void> deleteChallenge(
+            @PathVariable UUID eventId,
+            @PathVariable UUID challengeId) {
+        eventService.deleteChallenge(eventId, challengeId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{eventId}/challenges/{challengeId}/submissions")
+    public List<ChallengeSubmissionAdminView> getChallengeSubmissions(
+            @PathVariable UUID eventId,
+            @PathVariable UUID challengeId) {
+        return eventService.getChallengeSubmissions(eventId, challengeId);
+    }
+
+    @PostMapping("/{eventId}/challenges/{challengeId}/submissions/{submissionId}/review")
+    public ResponseEntity<Void> reviewChallengeSubmission(
+            @PathVariable UUID eventId,
+            @PathVariable UUID challengeId,
+            @PathVariable UUID submissionId,
+            @Valid @RequestBody ReviewChallengeSubmissionRequest request) {
+        eventService.reviewChallengeSubmission(eventId, challengeId, submissionId, request);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{eventId}/players/{eventPlayerId}/reset-device")
