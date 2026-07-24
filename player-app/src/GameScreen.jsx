@@ -16,6 +16,37 @@ const STATUS_BADGE_CLASS = {
   'visited_insufficient_funds': 'badge-visited-no-funds',
 };
 
+function normalizeChallengeValue(value) {
+  return String(value || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+}
+
+function getChallengeStatus(challenge) {
+  return normalizeChallengeValue(challenge?.status);
+}
+
+function getChallengeSubmissionStatus(challenge) {
+  return normalizeChallengeValue(challenge?.submissionStatus);
+}
+
+function isChallengeActive(challenge) {
+  return getChallengeStatus(challenge) === 'active';
+}
+
+function isAwaitingSubmission(challenge) {
+  return getChallengeSubmissionStatus(challenge) === 'awaiting_submission';
+}
+
+function isPendingReview(challenge) {
+  return getChallengeSubmissionStatus(challenge) === 'submitted_pending_review';
+}
+
+function isPlayerCompleteOutcome(challenge) {
+  const submissionStatus = getChallengeSubmissionStatus(challenge);
+  return submissionStatus === 'submitted_accomplished' ||
+    submissionStatus === 'submitted_failed' ||
+    submissionStatus === 'missed';
+}
+
 function RentIncomeList({ rentCollections }) {
   if (!rentCollections || rentCollections.length === 0) return null;
   const totalRent = rentCollections.reduce((s, r) => s + parseFloat(r.amount), 0);
@@ -60,6 +91,7 @@ export function GameScreen() {
   const { joinToken } = useParams();
   const [game, setGame] = useState(null);
   const [challenges, setChallenges] = useState([]);
+  const [submittingChallengeIds, setSubmittingChallengeIds] = useState([]);
   const [challengeAnnouncement, setChallengeAnnouncement] = useState('');
   const [error, setError] = useState('');
   const [gpsPos, setGpsPos] = useState(null);
@@ -84,12 +116,17 @@ export function GameScreen() {
         api.getGameView(joinToken),
         api.getChallenges(joinToken),
       ]);
+      const nextChallenges = Array.isArray(challengeData) ? challengeData : [];
       setGame({
         ...gameData,
         streets: Array.isArray(gameData?.streets) ? gameData.streets : [],
         rentCollections: Array.isArray(gameData?.rentCollections) ? gameData.rentCollections : [],
       });
-      setChallenges(challengeData || []);
+      setChallenges(nextChallenges);
+      setSubmittingChallengeIds(prev => prev.filter(id => {
+        const challenge = nextChallenges.find(ch => ch.id === id);
+        return challenge ? isAwaitingSubmission(challenge) : false;
+      }));
     } catch (e) {
       setError(e.message);
     }
@@ -192,6 +229,11 @@ export function GameScreen() {
     toastTimer.current = setTimeout(() => setToast(null), 4000);
   }
 
+  function clearChallengeAnnouncement() {
+    setChallengeAnnouncement('');
+    if (announcementTimer.current) clearTimeout(announcementTimer.current);
+  }
+
   function announceNewChallenges(newlyActiveChallenges) {
     if (!newlyActiveChallenges || newlyActiveChallenges.length === 0) return;
 
@@ -219,7 +261,7 @@ export function GameScreen() {
     if (challengeStatusesInitialized.current) {
       const newlyActive = challenges.filter(ch => {
         const previous = previousChallengeStatuses.current.get(ch.id);
-        return ch.status === 'active' && previous !== 'active' && ch.submissionStatus === 'awaiting_submission';
+        return isChallengeActive(ch) && normalizeChallengeValue(previous) !== 'active' && isAwaitingSubmission(ch);
       });
       announceNewChallenges(newlyActive);
     }
@@ -227,6 +269,13 @@ export function GameScreen() {
     previousChallengeStatuses.current = nextStatuses;
     challengeStatusesInitialized.current = true;
   }, [challenges]);
+
+  useEffect(() => {
+    const hasActionableChallenge = challenges.some(ch => isChallengeActive(ch) && isAwaitingSubmission(ch));
+    if (!hasActionableChallenge && challengeAnnouncement) {
+      clearChallengeAnnouncement();
+    }
+  }, [challenges, challengeAnnouncement]);
 
   useEffect(() => () => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -275,12 +324,24 @@ export function GameScreen() {
   async function handleChallengePhotoSelected(challenge, file) {
     if (!file) return;
     setUploadingChallengeId(challenge.id);
+    setSubmittingChallengeIds(prev => prev.includes(challenge.id) ? prev : [...prev, challenge.id]);
     try {
       const upload = await api.uploadChallengePhoto(file);
       await api.submitChallenge(joinToken, challenge.id, { photoUrl: upload.url });
+
+      // Keep the placeholder visible until the API confirms the challenge state has moved on.
+      setChallenges(prev => prev.map(ch => (
+        ch.id === challenge.id
+          ? { ...ch, submissionStatus: 'submitted_pending_review' }
+          : ch
+      )));
+
+      clearChallengeAnnouncement();
+
       showToast('Challenge photo submitted for review.', 'success');
       await loadGame();
     } catch (e) {
+      setSubmittingChallengeIds(prev => prev.filter(id => id !== challenge.id));
       showToast(e.message, 'error');
     } finally {
       setUploadingChallengeId(null);
@@ -288,7 +349,7 @@ export function GameScreen() {
   }
 
   function challengeStatusLabel(challenge) {
-    switch (challenge.submissionStatus) {
+    switch (getChallengeSubmissionStatus(challenge)) {
       case 'awaiting_submission':
         return 'Awaiting your photo';
       case 'submitted_pending_review':
@@ -437,26 +498,98 @@ export function GameScreen() {
   const visitedCount = streets.filter(s => s.visitStatus !== 'unvisited').length;
   const sortedChallenges = [...challenges].sort((a, b) => {
     const rank = (challenge) => {
-      const status = (challenge.status || '').toLowerCase().trim();
-      const submissionStatus = (challenge.submissionStatus || '').toLowerCase().trim();
+      const status = getChallengeStatus(challenge);
+      const submissionStatus = getChallengeSubmissionStatus(challenge);
 
-      // Keep actionable items at the top.
-      if (status === 'active' && submissionStatus === 'awaiting_submission') return 0;
-      if (status === 'active') return 1;
+      const isActionable = status === 'active' && submissionStatus === 'awaiting_submission';
+
+      // Only active + awaiting_submission should stay pinned at the top.
+      if (isActionable) return 0;
+
+      // Active but already submitted should not outrank actionable items.
+      if (status === 'active' && submissionStatus === 'submitted_pending_review') return 2;
 
       // Player-complete outcomes belong at the bottom.
-      if (
-        status === 'completed' ||
-        submissionStatus === 'submitted_accomplished' ||
-        submissionStatus === 'submitted_failed' ||
-        submissionStatus === 'missed'
-      ) return 3;
+      if (status === 'completed' || isPlayerCompleteOutcome(challenge)) return 4;
 
-      return 2;
+      // Not-yet-active (scheduled) and any unknown statuses sit between actionable and completed.
+      if (status === 'active') return 3;
+
+      return 1;
     };
     return rank(a) - rank(b);
   });
-  const activeChallenges = challenges.filter(c => c.status === 'active');
+  const actionableChallenges = sortedChallenges.filter(
+    ch => isChallengeActive(ch) && isAwaitingSubmission(ch) && !submittingChallengeIds.includes(ch.id)
+  );
+  const completedChallenges = sortedChallenges.filter(
+    ch => !(isChallengeActive(ch) && isAwaitingSubmission(ch) && !submittingChallengeIds.includes(ch.id))
+  );
+
+  function renderChallengeCard(ch) {
+    const submissionStatus = getChallengeSubmissionStatus(ch);
+    const isSubmitting = submittingChallengeIds.includes(ch.id);
+    const canSubmit = isChallengeActive(ch) && isAwaitingSubmission(ch) && !isSubmitting;
+    const submitted = ch.submittedPhotoUrl;
+
+    return (
+      <div key={ch.id} className="challenge-card">
+        <div className="challenge-card__header">
+          <div>
+            <div style={{ fontWeight: 700 }}>{ch.description}</div>
+            <div className="challenge-meta">
+              Prize £{parseFloat(ch.prizeAmount || 0).toFixed(0)} · {ch.durationMinutes} minutes
+            </div>
+            {ch.scheduledEndAt && isChallengeActive(ch) && (
+              <div className="challenge-meta" style={{ color: 'var(--text-dim)' }}>
+                Ends {new Date(ch.scheduledEndAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            )}
+          </div>
+          <span className={`street-status-badge ${
+            submissionStatus === 'submitted_accomplished' ? 'badge-owned' :
+            submissionStatus === 'submitted_failed' ? 'badge-visited-rent' :
+            submissionStatus === 'awaiting_submission' ? 'badge-unvisited' :
+            'badge-visited-no-funds'
+          }`}>
+            {challengeStatusLabel(ch)}
+          </span>
+        </div>
+
+        {submitted && (
+          <img
+            src={submitted}
+            alt="Submitted challenge"
+            className="media-preview"
+            style={{ maxHeight: 180 }}
+          />
+        )}
+
+        {(canSubmit || isSubmitting) && (
+          <div style={{ marginTop: 10 }}>
+            {isSubmitting ? (
+              <div className="challenge-uploading-placeholder" role="status" aria-live="polite">
+                <span className="challenge-uploading-spinner" aria-hidden="true" />
+                Submitting photo...
+              </div>
+            ) : (
+              <label className="checkin-btn challenge-submit-btn" style={{ display: 'inline-block', cursor: 'pointer', margin: 0 }}>
+                Submit Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: 'none' }}
+                  disabled={uploadingChallengeId === ch.id}
+                  onChange={(e) => handleChallengePhotoSelected(ch, e.target.files?.[0])}
+                />
+              </label>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -498,69 +631,14 @@ export function GameScreen() {
           </div>
         )}
 
+        {actionableChallenges.length > 0 && (
+          <div className="challenge-grid" style={{ marginBottom: 18 }}>
+            {actionableChallenges.map(renderChallengeCard)}
+          </div>
+        )}
+
         <div style={{ marginBottom: 18 }}>
-          <div className="section-eyebrow" style={{ marginBottom: 10 }}>Challenges</div>
-          {challenges.length === 0 ? (
-            <div className="muted" style={{ fontSize: 13 }}>No challenges are available for this event.</div>
-          ) : (
-            <div className="challenge-grid">
-              {sortedChallenges.map(ch => {
-                const canSubmit = ch.status === 'active' && ch.submissionStatus === 'awaiting_submission';
-                const submitted = ch.submittedPhotoUrl;
-                return (
-                  <div key={ch.id} className="challenge-card">
-                    <div className="challenge-card__header">
-                      <div>
-                        <div style={{ fontWeight: 700 }}>{ch.description}</div>
-                        <div className="challenge-meta">
-                          Prize £{parseFloat(ch.prizeAmount || 0).toFixed(0)} · {ch.durationMinutes} minutes
-                        </div>
-                        {ch.scheduledEndAt && ch.status === 'active' && (
-                          <div className="challenge-meta" style={{ color: 'var(--text-dim)' }}>
-                            Ends {new Date(ch.scheduledEndAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                        )}
-                      </div>
-                      <span className={`street-status-badge ${
-                        ch.submissionStatus === 'submitted_accomplished' ? 'badge-owned' :
-                        ch.submissionStatus === 'submitted_failed' ? 'badge-visited-rent' :
-                        ch.submissionStatus === 'awaiting_submission' ? 'badge-unvisited' :
-                        'badge-visited-no-funds'
-                      }`}>
-                        {challengeStatusLabel(ch)}
-                      </span>
-                    </div>
-
-                    {submitted && (
-                      <img
-                        src={submitted}
-                        alt="Submitted challenge"
-                        className="media-preview"
-                        style={{ maxHeight: 180 }}
-                      />
-                    )}
-
-                    {canSubmit && (
-                      <div style={{ marginTop: 10 }}>
-                        <label className="checkin-btn" style={{ display: 'inline-block', cursor: 'pointer', margin: 0 }}>
-                          {uploadingChallengeId === ch.id ? 'Uploading...' : 'Submit Photo'}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            style={{ display: 'none' }}
-                            disabled={uploadingChallengeId === ch.id}
-                            onChange={(e) => handleChallengePhotoSelected(ch, e.target.files?.[0])}
-                          />
-                        </label>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          {activeChallenges.length > 1 && (
+          {actionableChallenges.length > 1 && (
             <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-dim)' }}>
               Multiple active challenges are currently available.
             </div>
@@ -658,6 +736,15 @@ export function GameScreen() {
         {game.rentCollections && game.rentCollections.length > 0 && (
           <div style={{ marginTop: 20 }}>
             <RentIncomeList rentCollections={game.rentCollections} />
+          </div>
+        )}
+
+        {completedChallenges.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <div className="section-eyebrow" style={{ marginBottom: 10 }}>Completed Challenges</div>
+            <div className="challenge-grid">
+              {completedChallenges.map(renderChallengeCard)}
+            </div>
           </div>
         )}
       </div>
