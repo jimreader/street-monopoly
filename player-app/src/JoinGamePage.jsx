@@ -73,9 +73,9 @@ export function JoinGamePage() {
                   src={summary.eventLogoUrl}
                   alt={`${summary.eventName} logo`}
                   style={{
-                    maxHeight: 72,
+                    maxHeight: 148,
                     width: 'auto',
-                    maxWidth: 'min(80vw, 300px)',
+                    maxWidth: 'min(92vw, 520px)',
                     objectFit: 'contain',
                     margin: '0 auto 12px',
                     borderRadius: 8

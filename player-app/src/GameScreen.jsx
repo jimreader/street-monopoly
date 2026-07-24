@@ -414,6 +414,23 @@ export function GameScreen() {
           />
         </div>
         <div className="countdown-screen" style={{ minHeight: 'calc(100dvh - 66px)' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, marginBottom: 12 }}>
+            {game.eventName}
+          </h2>
+          {game.eventLogoUrl && (
+            <img
+              src={game.eventLogoUrl}
+              alt={`${game.eventName} logo`}
+              style={{
+                maxHeight: 148,
+                width: 'auto',
+                maxWidth: 'min(92vw, 520px)',
+                objectFit: 'contain',
+                margin: '0 auto 16px',
+                borderRadius: 8
+              }}
+            />
+          )}
           <div style={{ fontSize: 64, marginBottom: 24 }}>⏳</div>
           <p className="countdown-label">Event starts in</p>
           <div className="countdown-timer">{countdown}</div>
@@ -423,23 +440,6 @@ export function GameScreen() {
               hour: '2-digit', minute: '2-digit'
             })}
           </p>
-          {game.eventLogoUrl && (
-            <img
-              src={game.eventLogoUrl}
-              alt={`${game.eventName} logo`}
-              style={{
-                maxHeight: 72,
-                width: 'auto',
-                maxWidth: 'min(80vw, 300px)',
-                objectFit: 'contain',
-                margin: '12px auto 0',
-                borderRadius: 8
-              }}
-            />
-          )}
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, marginTop: 32 }}>
-            {game.eventName}
-          </h2>
         </div>
       </div>
     );
@@ -467,6 +467,20 @@ export function GameScreen() {
         <div className="game-over-screen" style={{ minHeight: 'auto', paddingBottom: 20 }}>
           <div className="game-over-icon">🏁</div>
           <h1 className="game-over-title">Event Complete</h1>
+          {game.eventLogoUrl && (
+            <img
+              src={game.eventLogoUrl}
+              alt={`${game.eventName} logo`}
+              style={{
+                maxHeight: 148,
+                width: 'auto',
+                maxWidth: 'min(92vw, 520px)',
+                objectFit: 'contain',
+                margin: '8px auto 14px',
+                borderRadius: 8
+              }}
+            />
+          )}
           <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>{game.eventName}</p>
 
           <p className="final-note" style={{ marginBottom: 20, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>
