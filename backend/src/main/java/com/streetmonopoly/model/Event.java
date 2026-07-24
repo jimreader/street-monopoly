@@ -10,6 +10,7 @@ import java.util.UUID;
 public class Event {
     private UUID id;
     private String name;
+    private String logoImageUrl;
     private UUID gameMapId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;

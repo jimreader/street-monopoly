@@ -31,7 +31,11 @@ async function request(url, options = {}) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || 'Request failed');
+    const message = err.error || 'Request failed';
+    if (/expected pattern|string did not meet/i.test(message)) {
+      throw new Error('Photo submission failed. Please try again.');
+    }
+    throw new Error(message);
   }
   return res.json();
 }
@@ -57,7 +61,11 @@ export const api = {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(err.error || 'Upload failed');
+      const message = err.error || 'Upload failed';
+      if (/expected pattern|string did not meet/i.test(message)) {
+        throw new Error('Photo upload failed. Please try a different image.');
+      }
+      throw new Error(message);
     }
     return res.json();
   },

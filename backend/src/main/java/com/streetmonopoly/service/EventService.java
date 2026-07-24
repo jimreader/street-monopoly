@@ -51,6 +51,7 @@ public class EventService {
         Event event = new Event();
         event.setId(UUID.randomUUID());
         event.setName(request.getName());
+        event.setLogoImageUrl(normalizeOptionalText(request.getLogoImageUrl()));
         event.setGameMapId(request.getGameMapId());
         event.setStartTime(request.getStartTime());
         event.setEndTime(request.getEndTime());
@@ -60,6 +61,34 @@ public class EventService {
         event.setStatus("pending");
         eventMapper.insert(event);
         return eventMapper.findById(event.getId());
+    }
+
+    @Transactional
+    public Event updateEvent(UUID eventId, UpdateEventRequest request) {
+        Event existing = getEvent(eventId);
+        if (!"pending".equals(existing.getStatus())) {
+            throw new RuntimeException("Only pending events can be edited");
+        }
+
+        GameMap map = gameMapMapper.findById(request.getGameMapId());
+        if (map == null) throw new RuntimeException("Game map not found");
+
+        if (request.getEndTime().isBefore(request.getStartTime()) || request.getEndTime().isEqual(request.getStartTime())) {
+            throw new RuntimeException("End time must be after start time");
+        }
+
+        existing.setName(request.getName().trim());
+        existing.setLogoImageUrl(normalizeOptionalText(request.getLogoImageUrl()));
+        existing.setGameMapId(request.getGameMapId());
+        existing.setStartTime(request.getStartTime());
+        existing.setEndTime(request.getEndTime());
+        existing.setStartingBalance(request.getStartingBalance());
+        existing.setProximityMetres(request.getProximityMetres());
+        existing.setMaxPlayersPerGame(request.getMaxPlayersPerGame());
+
+        int updated = eventMapper.updateDetails(existing);
+        if (updated == 0) throw new RuntimeException("Event not found: " + eventId);
+        return eventMapper.findById(eventId);
     }
 
     @Transactional
@@ -248,6 +277,7 @@ public class EventService {
         AdminEventView view = new AdminEventView();
         view.setEventId(event.getId());
         view.setEventName(event.getName());
+        view.setLogoImageUrl(event.getLogoImageUrl());
         view.setStatus(event.getStatus());
         view.setStartTime(event.getStartTime());
         view.setEndTime(event.getEndTime());
@@ -509,6 +539,12 @@ public class EventService {
         if (!LocalDateTime.now().isBefore(event.getStartTime())) {
             throw new RuntimeException("Challenges can only be managed before the event starts");
         }
+    }
+
+    private String normalizeOptionalText(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private void validateChallengeDurationsFitEvent(Event event, int totalDurationMinutes) {

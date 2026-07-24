@@ -54,6 +54,7 @@ public class GameService {
             pendingView.setGameId(ep.getAssignedGameId());
             pendingView.setGameName(event.getName());
             pendingView.setEventName(event.getName());
+            pendingView.setEventLogoUrl(event.getLogoImageUrl());
             pendingView.setStatus(event.getStatus());
             pendingView.setStartTime(event.getStartTime());
             pendingView.setEndTime(event.getEndTime());
@@ -86,6 +87,7 @@ public class GameService {
         view.setGameId(game.getId());
         view.setGameName(game.getName());
         view.setEventName(event != null ? event.getName() : game.getName());
+        view.setEventLogoUrl(event != null ? event.getLogoImageUrl() : null);
         view.setStatus(game.getStatus());
         view.setStartTime(game.getStartTime());
         view.setEndTime(game.getEndTime());
@@ -136,6 +138,7 @@ public class GameService {
             summary.setGameId(game.getId());
             summary.setGameName(game.getName());
             summary.setEventName(event != null ? event.getName() : game.getName());
+            summary.setEventLogoUrl(event != null ? event.getLogoImageUrl() : null);
             summary.setStatus(game.getStatus());
             summary.setStartTime(game.getStartTime());
             summary.setEndTime(game.getEndTime());
@@ -152,6 +155,7 @@ public class GameService {
         summary.setGameId(ep.getAssignedGameId());
         summary.setGameName(event.getName());
         summary.setEventName(event.getName());
+        summary.setEventLogoUrl(event.getLogoImageUrl());
         summary.setStatus(event.getStatus());
         summary.setStartTime(event.getStartTime());
         summary.setEndTime(event.getEndTime());

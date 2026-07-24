@@ -384,6 +384,13 @@ textarea:focus-visible {
   flex-shrink: 0;
 }
 
+.header-logo--event {
+  height: 22px;
+  max-width: 140px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
 .game-over-icon { font-size: 88px; margin-bottom: 16px; }
 
 .game-over-title {

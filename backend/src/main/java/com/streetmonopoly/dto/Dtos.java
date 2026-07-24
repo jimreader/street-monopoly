@@ -48,6 +48,19 @@ public class Dtos {
         @NotNull @Positive private BigDecimal startingBalance;
         @NotNull @Min(1) private Integer proximityMetres;
         @NotNull @Min(1) private Integer maxPlayersPerGame;
+        private String logoImageUrl;
+    }
+
+    @Data
+    public static class UpdateEventRequest {
+        @NotBlank private String name;
+        @NotNull private UUID gameMapId;
+        @NotNull private LocalDateTime startTime;
+        @NotNull private LocalDateTime endTime;
+        @NotNull @Positive private BigDecimal startingBalance;
+        @NotNull @Min(1) private Integer proximityMetres;
+        @NotNull @Min(1) private Integer maxPlayersPerGame;
+        private String logoImageUrl;
     }
 
     // ---- Invite ----
@@ -157,6 +170,7 @@ public class Dtos {
         private UUID gameId;
         private String gameName;
         private String eventName;
+        private String eventLogoUrl;
         private String status;
         private LocalDateTime startTime;
         private LocalDateTime endTime;
@@ -167,6 +181,7 @@ public class Dtos {
         private UUID gameId;
         private String gameName;
         private String eventName;
+        private String eventLogoUrl;
         private String status;
         private LocalDateTime startTime;
         private LocalDateTime endTime;
@@ -223,6 +238,7 @@ public class Dtos {
     public static class AdminEventView {
         private UUID eventId;
         private String eventName;
+        private String logoImageUrl;
         private String status;
         private LocalDateTime startTime;
         private LocalDateTime endTime;

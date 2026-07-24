@@ -6,8 +6,10 @@ export function CreateGamePage() {
   const navigate = useNavigate();
   const [maps, setMaps] = useState([]);
   const [error, setError] = useState('');
+  const [logoUploading, setLogoUploading] = useState(false);
   const [form, setForm] = useState({
     name: '',
+    logoImageUrl: '',
     gameMapId: '',
     startTime: '',
     endTime: '',
@@ -27,12 +29,27 @@ export function CreateGamePage() {
     return value.length === 16 ? `${value}:00` : value;
   }
 
+  async function handleLogoFileSelected(file) {
+    if (!file) return;
+    setError('');
+    setLogoUploading(true);
+    try {
+      const uploaded = await api.uploadImage(file);
+      setField('logoImageUrl', uploaded.url);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLogoUploading(false);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     try {
       const event = await api.createEvent({
         name: form.name,
+        logoImageUrl: form.logoImageUrl || null,
         gameMapId: form.gameMapId,
         startTime: toLocalDateTimePayload(form.startTime),
         endTime: toLocalDateTimePayload(form.endTime),
@@ -64,6 +81,37 @@ export function CreateGamePage() {
             <label className="form-label">Event Name</label>
             <input className="form-input" value={form.name} onChange={e => setField('name', e.target.value)}
               placeholder="e.g. Saturday Street Dash" required autoFocus />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Event Logo (optional)</label>
+            <div className="split" style={{ gap: 8 }}>
+              <label className="btn btn-secondary btn-sm" style={{ cursor: logoUploading ? 'wait' : 'pointer' }}>
+                {logoUploading ? 'Uploading...' : 'Upload Logo'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  disabled={logoUploading}
+                  onChange={(e) => handleLogoFileSelected(e.target.files?.[0])}
+                />
+              </label>
+              {form.logoImageUrl && (
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setField('logoImageUrl', '')}>
+                  Remove
+                </button>
+              )}
+            </div>
+            <p className="form-help">Used on player join, waiting, completed, and main game header screens.</p>
+            {form.logoImageUrl && (
+              <div className="preview-panel" style={{ marginTop: 10 }}>
+                <img
+                  src={form.logoImageUrl}
+                  alt="Event logo preview"
+                  style={{ maxHeight: 72, width: 'auto', objectFit: 'contain' }}
+                />
+              </div>
+            )}
           </div>
 
           <div className="form-group">

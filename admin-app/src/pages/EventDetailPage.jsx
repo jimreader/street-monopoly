@@ -22,8 +22,25 @@ export function EventDetailPage() {
   const [success, setSuccess] = useState('');
   const [deletingEvent, setDeletingEvent] = useState(false);
   const [deletingPlayerId, setDeletingPlayerId] = useState(null);
+  const [maps, setMaps] = useState([]);
+  const [showEditEvent, setShowEditEvent] = useState(false);
+  const [savingEvent, setSavingEvent] = useState(false);
+  const [eventLogoUploading, setEventLogoUploading] = useState(false);
+  const [editEventForm, setEditEventForm] = useState({
+    name: '',
+    logoImageUrl: '',
+    gameMapId: '',
+    startTime: '',
+    endTime: '',
+    startingBalance: '',
+    proximityMetres: '',
+    maxPlayersPerGame: ''
+  });
 
   useEffect(() => { loadData(); }, [id]);
+  useEffect(() => {
+    api.getMaps().then(setMaps).catch(e => setError(e.message));
+  }, []);
 
   useEffect(() => {
     if (view?.status === 'active') {
@@ -205,6 +222,79 @@ export function EventDetailPage() {
     });
   }
 
+  function toInputDateTime(iso) {
+    if (!iso) return '';
+    const normalized = String(iso).trim().replace(' ', 'T');
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(normalized)) {
+      return normalized.slice(0, 16);
+    }
+    const d = new Date(normalized);
+    if (Number.isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function toLocalDateTimePayload(value) {
+    if (!value) return value;
+    return value.length === 16 ? `${value}:00` : value;
+  }
+
+  function openEditEventModal() {
+    api.getEvent(id).then((event) => {
+      setEditEventForm({
+        name: event.name || '',
+        logoImageUrl: event.logoImageUrl || '',
+        gameMapId: event.gameMapId || '',
+        startTime: toInputDateTime(event.startTime),
+        endTime: toInputDateTime(event.endTime),
+        startingBalance: String(event.startingBalance ?? ''),
+        proximityMetres: String(event.proximityMetres ?? ''),
+        maxPlayersPerGame: String(event.maxPlayersPerGame ?? '')
+      });
+      setShowEditEvent(true);
+    }).catch(e => setError(e.message));
+  }
+
+  async function handleEventLogoSelected(file) {
+    if (!file) return;
+    setEventLogoUploading(true);
+    setError('');
+    try {
+      const uploaded = await api.uploadImage(file);
+      setEditEventForm(f => ({ ...f, logoImageUrl: uploaded.url }));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setEventLogoUploading(false);
+    }
+  }
+
+  async function handleSaveEvent(e) {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setSavingEvent(true);
+    try {
+      await api.updateEvent(id, {
+        name: editEventForm.name,
+        logoImageUrl: editEventForm.logoImageUrl || null,
+        gameMapId: editEventForm.gameMapId,
+        startTime: toLocalDateTimePayload(editEventForm.startTime),
+        endTime: toLocalDateTimePayload(editEventForm.endTime),
+        startingBalance: Number(editEventForm.startingBalance),
+        proximityMetres: Number(editEventForm.proximityMetres),
+        maxPlayersPerGame: Number(editEventForm.maxPlayersPerGame),
+      });
+      setShowEditEvent(false);
+      setSuccess('Event updated.');
+      await loadData();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSavingEvent(false);
+    }
+  }
+
   if (!view) return <div className="empty-state-card">Loading...</div>;
 
   return (
@@ -223,6 +313,9 @@ export function EventDetailPage() {
           </div>
         </div>
         <div className="page-actions">
+          {view.status === 'pending' && (
+            <button className="btn btn-secondary" onClick={openEditEventModal}>Edit Event</button>
+          )}
           {(view.status === 'pending' || view.status === 'active') && (
             <button className="btn btn-primary" onClick={() => setShowInvite(true)}>+ Invite Player</button>
           )}
@@ -471,6 +564,104 @@ export function EventDetailPage() {
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowInvite(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary">Add Player</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditEvent && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowEditEvent(false)}>
+          <div className="modal">
+            <div className="modal-header">
+              <div>
+                <div className="modal-kicker">Events</div>
+                <h2 className="modal-title">Edit Event</h2>
+                <p className="modal-lead">Update event details before it starts.</p>
+              </div>
+            </div>
+            <form className="modal-body" onSubmit={handleSaveEvent}>
+              <div className="form-group">
+                <label className="form-label">Event Name</label>
+                <input className="form-input" value={editEventForm.name}
+                  onChange={e => setEditEventForm(f => ({ ...f, name: e.target.value }))}
+                  required autoFocus />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Event Logo (optional)</label>
+                <div className="split" style={{ gap: 8 }}>
+                  <label className="btn btn-secondary btn-sm" style={{ cursor: eventLogoUploading ? 'wait' : 'pointer' }}>
+                    {eventLogoUploading ? 'Uploading...' : 'Upload Logo'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      disabled={eventLogoUploading}
+                      onChange={(e) => handleEventLogoSelected(e.target.files?.[0])}
+                    />
+                  </label>
+                  {editEventForm.logoImageUrl && (
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditEventForm(f => ({ ...f, logoImageUrl: '' }))}>
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {editEventForm.logoImageUrl && (
+                  <div className="preview-panel" style={{ marginTop: 10 }}>
+                    <img src={editEventForm.logoImageUrl} alt="Event logo preview" style={{ maxHeight: 72, width: 'auto', objectFit: 'contain' }} />
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Event Map</label>
+                <select className="form-select" value={editEventForm.gameMapId}
+                  onChange={e => setEditEventForm(f => ({ ...f, gameMapId: e.target.value }))} required>
+                  <option value="">Select a map...</option>
+                  {maps.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Start Time</label>
+                  <input className="form-input" type="datetime-local" value={editEventForm.startTime}
+                    onChange={e => setEditEventForm(f => ({ ...f, startTime: e.target.value }))} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">End Time</label>
+                  <input className="form-input" type="datetime-local" value={editEventForm.endTime}
+                    onChange={e => setEditEventForm(f => ({ ...f, endTime: e.target.value }))} required />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Starting Budget (£)</label>
+                  <input className="form-input" type="number" min="1" value={editEventForm.startingBalance}
+                    onChange={e => setEditEventForm(f => ({ ...f, startingBalance: e.target.value }))} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">GPS Proximity (metres)</label>
+                  <input className="form-input" type="number" min="1" max="1000" value={editEventForm.proximityMetres}
+                    onChange={e => setEditEventForm(f => ({ ...f, proximityMetres: e.target.value }))} required />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Max Players Per Game</label>
+                <input className="form-input" type="number" min="1" max="200" value={editEventForm.maxPlayersPerGame}
+                  onChange={e => setEditEventForm(f => ({ ...f, maxPlayersPerGame: e.target.value }))} required />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowEditEvent(false)} disabled={savingEvent}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={savingEvent || eventLogoUploading}>
+                  {savingEvent ? 'Saving...' : 'Save Event'}
+                </button>
               </div>
             </form>
           </div>

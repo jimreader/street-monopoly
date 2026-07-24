@@ -68,6 +68,20 @@ export function JoinGamePage() {
             </p>
           ) : (
             <>
+              {summary.eventLogoUrl && (
+                <img
+                  src={summary.eventLogoUrl}
+                  alt={`${summary.eventName} logo`}
+                  style={{
+                    maxHeight: 72,
+                    width: 'auto',
+                    maxWidth: 'min(80vw, 300px)',
+                    objectFit: 'contain',
+                    margin: '0 auto 12px',
+                    borderRadius: 8
+                  }}
+                />
+              )}
               <p className="hero-sub" style={{ maxWidth: 360, marginBottom: 8 }}>
                 <strong>{summary.eventName}</strong>
               </p>

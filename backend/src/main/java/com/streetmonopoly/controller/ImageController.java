@@ -12,6 +12,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.core.exception.SdkException;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -66,13 +67,17 @@ public class ImageController {
         String filename = UUID.randomUUID() + ".jpg";
         byte[] bytes = toJpegBytes(resized, JPEG_QUALITY);
 
-        s3.putObject(
+        try {
+            s3.putObject(
                 PutObjectRequest.builder()
-                        .bucket(bucket)
-                        .key(filename)
-                        .contentType("image/jpeg")
-                        .build(),
+                    .bucket(bucket)
+                    .key(filename)
+                    .contentType("image/jpeg")
+                    .build(),
                 RequestBody.fromBytes(bytes));
+        } catch (SdkException ex) {
+            throw new RuntimeException("Image upload failed. Please try a different image.");
+        }
 
         return Map.of("url", "/api/images/" + filename, "filename", filename);
     }

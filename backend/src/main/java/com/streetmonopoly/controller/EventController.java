@@ -36,6 +36,11 @@ public class EventController {
         return eventService.createEvent(request);
     }
 
+    @PutMapping("/{id}")
+    public Event updateEvent(@PathVariable UUID id, @Valid @RequestBody UpdateEventRequest request) {
+        return eventService.updateEvent(id, request);
+    }
+
     @PostMapping("/{eventId}/invite")
     public EventPlayer invitePlayer(@PathVariable UUID eventId, @Valid @RequestBody InvitePlayerRequest request) {
         return eventService.invitePlayer(eventId, request);

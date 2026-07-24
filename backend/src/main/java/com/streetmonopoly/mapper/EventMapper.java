@@ -15,9 +15,14 @@ public interface EventMapper {
     @Select("SELECT * FROM event WHERE id = #{id} AND deleted_at IS NULL")
     Event findById(UUID id);
 
-    @Insert("INSERT INTO event (id, name, game_map_id, start_time, end_time, starting_balance, proximity_metres, max_players_per_game, status) " +
-            "VALUES (#{id}, #{name}, #{gameMapId}, #{startTime}, #{endTime}, #{startingBalance}, #{proximityMetres}, #{maxPlayersPerGame}, #{status})")
+        @Insert("INSERT INTO event (id, name, logo_image_url, game_map_id, start_time, end_time, starting_balance, proximity_metres, max_players_per_game, status) " +
+            "VALUES (#{id}, #{name}, #{logoImageUrl}, #{gameMapId}, #{startTime}, #{endTime}, #{startingBalance}, #{proximityMetres}, #{maxPlayersPerGame}, #{status})")
     void insert(Event event);
+
+        @Update("UPDATE event SET name = #{name}, logo_image_url = #{logoImageUrl}, game_map_id = #{gameMapId}, start_time = #{startTime}, end_time = #{endTime}, " +
+            "starting_balance = #{startingBalance}, proximity_metres = #{proximityMetres}, max_players_per_game = #{maxPlayersPerGame} " +
+            "WHERE id = #{id} AND deleted_at IS NULL")
+        int updateDetails(Event event);
 
     @Update("UPDATE event SET status = #{status} WHERE id = #{id} AND deleted_at IS NULL")
     void updateStatus(@Param("id") UUID id, @Param("status") String status);

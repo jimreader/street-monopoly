@@ -56,6 +56,7 @@ export const api = {
   getEvents: () => request('/events'),
   getEvent: (id) => request(`/events/${id}`),
   createEvent: (data) => request('/events', { method: 'POST', body: JSON.stringify(data) }),
+  updateEvent: (id, data) => request(`/events/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   inviteEventPlayer: (eventId, data) => request(`/events/${eventId}/invite`, { method: 'POST', body: JSON.stringify(data) }),
   getEventPlayers: (eventId) => request(`/events/${eventId}/players`),
   getEventGames: (eventId) => request(`/events/${eventId}/games`),

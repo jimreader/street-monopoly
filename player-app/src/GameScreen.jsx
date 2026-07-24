@@ -423,6 +423,20 @@ export function GameScreen() {
               hour: '2-digit', minute: '2-digit'
             })}
           </p>
+          {game.eventLogoUrl && (
+            <img
+              src={game.eventLogoUrl}
+              alt={`${game.eventName} logo`}
+              style={{
+                maxHeight: 72,
+                width: 'auto',
+                maxWidth: 'min(80vw, 300px)',
+                objectFit: 'contain',
+                margin: '12px auto 0',
+                borderRadius: 8
+              }}
+            />
+          )}
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, marginTop: 32 }}>
             {game.eventName}
           </h2>
