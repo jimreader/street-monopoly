@@ -236,8 +236,8 @@ public class EventService {
                                           UUID submissionId,
                                           ReviewChallengeSubmissionRequest request) {
         Event event = getEvent(eventId);
-        if (!"active".equals(event.getStatus())) {
-            throw new RuntimeException("Challenge submissions can only be reviewed while the event is active");
+        if ("pending".equals(event.getStatus())) {
+            throw new RuntimeException("Challenge submissions can only be reviewed once the event has started");
         }
 
         EventChallenge challenge = eventChallengeMapper.findByEventAndId(eventId, challengeId);
@@ -257,6 +257,12 @@ public class EventService {
             BigDecimal newBalance = gp.getBalance().add(challenge.getPrizeAmount());
             gamePlayerMapper.updateBalance(gp.getId(), newBalance);
             prizeAward = challenge.getPrizeAmount();
+
+            // Balance updates alone don't move a completed game's leaderboard, which ranks by finalBalance
+            Game game = gameMapper.findById(gp.getGameId());
+            if (game != null && "completed".equals(game.getStatus()) && gp.getFinalBalance() != null) {
+                gamePlayerMapper.updateFinalBalance(gp.getId(), gp.getFinalBalance().add(challenge.getPrizeAmount()));
+            }
         }
 
         eventChallengeSubmissionMapper.review(
