@@ -42,15 +42,11 @@ public class EmailService {
             System.out.println("==========================================");
             return;
         }
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(body);
-            mailSender.send(message);
-        } catch (Exception e) {
-            System.err.println("Failed to send email to " + to + ": " + e.getMessage());
-            // Log but don't fail the operation
-        }
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(body);
+        // Let send failures propagate so the caller can retry / record the failure.
+        mailSender.send(message);
     }
 }

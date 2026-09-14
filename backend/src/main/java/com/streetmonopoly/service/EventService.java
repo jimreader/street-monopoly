@@ -4,6 +4,7 @@ import com.streetmonopoly.dto.Dtos.*;
 import com.streetmonopoly.mapper.*;
 import com.streetmonopoly.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,8 +27,8 @@ public class EventService {
     @Autowired private GameStreetMapper gameStreetMapper;
     @Autowired private StreetVisitMapper streetVisitMapper;
     @Autowired private PlayerMapper playerMapper;
-    @Autowired private EmailService emailService;
     @Autowired private GameService gameService;
+    @Autowired private ApplicationEventPublisher eventPublisher;
 
     public List<Event> getAllEvents() {
         return eventMapper.findAll();
@@ -130,7 +131,7 @@ public class EventService {
             UUID inviteToken = UUID.randomUUID();
             UUID joinToken = UUID.randomUUID();
             eventPlayerMapper.restorePlayer(deletedLink.getId(), inviteToken, joinToken);
-            emailService.sendJoinEmail(player.getEmail(), player.getName(), event.getName(), joinToken);
+            eventPublisher.publishEvent(new PlayerInvitedEvent(deletedLink.getId(), player.getEmail(), player.getName(), event.getName(), joinToken));
 
             EventPlayer restored = eventPlayerMapper.findByEventAndId(eventId, deletedLink.getId());
             restored.setPlayer(player);
@@ -146,7 +147,7 @@ public class EventService {
         eventPlayerMapper.insert(ep);
         eventPlayerMapper.markJoined(ep.getId());
 
-        emailService.sendJoinEmail(player.getEmail(), player.getName(), event.getName(), ep.getJoinToken());
+        eventPublisher.publishEvent(new PlayerInvitedEvent(ep.getId(), player.getEmail(), player.getName(), event.getName(), ep.getJoinToken()));
 
         ep.setPlayer(player);
         return ep;

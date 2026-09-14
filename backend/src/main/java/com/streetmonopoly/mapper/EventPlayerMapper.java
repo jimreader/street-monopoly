@@ -3,6 +3,7 @@ package com.streetmonopoly.mapper;
 import com.streetmonopoly.model.EventPlayer;
 import org.apache.ibatis.annotations.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +23,9 @@ public interface EventPlayerMapper {
             @Result(property = "invitedAt", column = "invited_at"),
             @Result(property = "joinedAt", column = "joined_at"),
             @Result(property = "deviceToken", column = "device_token"),
+            @Result(property = "inviteEmailStatus", column = "invite_email_status"),
+            @Result(property = "inviteEmailSentAt", column = "invite_email_sent_at"),
+            @Result(property = "inviteEmailError", column = "invite_email_error"),
             @Result(property = "player.name", column = "player.name"),
             @Result(property = "player.email", column = "player.email")
     })
@@ -60,8 +64,15 @@ public interface EventPlayerMapper {
     @Update("UPDATE event_player SET device_token = NULL WHERE id = #{id} AND deleted_at IS NULL")
     void clearDeviceToken(UUID id);
 
-    @Update("UPDATE event_player SET deleted_at = NULL, joined_at = NOW(), invite_token = #{inviteToken}, join_token = #{joinToken}, assigned_game_id = NULL, device_token = NULL WHERE id = #{id}")
+    @Update("UPDATE event_player SET deleted_at = NULL, joined_at = NOW(), invite_token = #{inviteToken}, join_token = #{joinToken}, assigned_game_id = NULL, device_token = NULL, " +
+            "invite_email_status = 'pending', invite_email_sent_at = NULL, invite_email_error = NULL WHERE id = #{id}")
     void restorePlayer(@Param("id") UUID id, @Param("inviteToken") UUID inviteToken, @Param("joinToken") UUID joinToken);
+
+    @Update("UPDATE event_player SET invite_email_status = #{status}, invite_email_sent_at = #{sentAt}, invite_email_error = #{error} WHERE id = #{id}")
+    void updateInviteEmailStatus(@Param("id") UUID id,
+                                  @Param("status") String status,
+                                  @Param("sentAt") LocalDateTime sentAt,
+                                  @Param("error") String error);
 
     @Update("UPDATE event_player SET deleted_at = NOW(), assigned_game_id = NULL, device_token = NULL WHERE event_id = #{eventId} AND id = #{id} AND deleted_at IS NULL")
     int softDelete(@Param("eventId") UUID eventId, @Param("id") UUID id);

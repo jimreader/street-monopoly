@@ -43,11 +43,12 @@ export function EventDetailPage() {
   }, []);
 
   useEffect(() => {
-    if (view?.status === 'active') {
-      const interval = setInterval(loadData, 10000);
+    const hasPendingInviteEmail = players.some(p => p.inviteEmailStatus === 'pending');
+    if (view?.status === 'active' || hasPendingInviteEmail) {
+      const interval = setInterval(loadData, hasPendingInviteEmail ? 4000 : 10000);
       return () => clearInterval(interval);
     }
-  }, [view?.status]);
+  }, [view?.status, players]);
 
   async function loadData() {
     try {
@@ -222,6 +223,16 @@ export function EventDetailPage() {
     });
   }
 
+  function renderInviteEmailStatus(status) {
+    if (status === 'sent') {
+      return <span className="status-pill status-pill--success">Sent</span>;
+    }
+    if (status === 'failed') {
+      return <span className="status-pill status-pill--danger">Failed</span>;
+    }
+    return <span className="status-pill status-pill--warning">Sending…</span>;
+  }
+
   function toInputDateTime(iso) {
     if (!iso) return '';
     const normalized = String(iso).trim().replace(' ', 'T');
@@ -361,6 +372,7 @@ export function EventDetailPage() {
                   <tr>
                     <th>Name</th>
                     <th>Email</th>
+                    <th>Invite email</th>
                     <th>Assigned game</th>
                     <th>Joined</th>
                     {(view.status === 'pending' || view.status === 'active') && <th></th>}
@@ -371,6 +383,7 @@ export function EventDetailPage() {
                     <tr key={ep.id}>
                       <td style={{ fontWeight: 500 }}>{ep.player?.name || '—'}</td>
                       <td style={{ color: 'var(--text-muted)' }}>{ep.player?.email || '—'}</td>
+                      <td>{renderInviteEmailStatus(ep.inviteEmailStatus)}</td>
                       <td>
                         {ep.assignedGameId ? (
                           <Link to={`/games/${ep.assignedGameId}`} style={{ textDecoration: 'none' }}>View game</Link>

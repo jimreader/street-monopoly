@@ -17,6 +17,9 @@ public class EventPlayer {
     private LocalDateTime joinedAt;
     private String deviceToken;
     private LocalDateTime deletedAt;
+    private String inviteEmailStatus; // pending, sent, failed
+    private LocalDateTime inviteEmailSentAt;
+    private String inviteEmailError;
 
     // Joined
     private Player player;
