@@ -34,7 +34,8 @@ export function EventDetailPage() {
     endTime: '',
     startingBalance: '',
     proximityMetres: '',
-    maxPlayersPerGame: ''
+    maxPlayersPerGame: '',
+    unvisitedStreetPenaltyPercent: ''
   });
 
   useEffect(() => { loadData(); }, [id]);
@@ -260,7 +261,8 @@ export function EventDetailPage() {
         endTime: toInputDateTime(event.endTime),
         startingBalance: String(event.startingBalance ?? ''),
         proximityMetres: String(event.proximityMetres ?? ''),
-        maxPlayersPerGame: String(event.maxPlayersPerGame ?? '')
+        maxPlayersPerGame: String(event.maxPlayersPerGame ?? ''),
+        unvisitedStreetPenaltyPercent: String(event.unvisitedStreetPenaltyPercent ?? '150')
       });
       setShowEditEvent(true);
     }).catch(e => setError(e.message));
@@ -295,6 +297,7 @@ export function EventDetailPage() {
         startingBalance: Number(editEventForm.startingBalance),
         proximityMetres: Number(editEventForm.proximityMetres),
         maxPlayersPerGame: Number(editEventForm.maxPlayersPerGame),
+        unvisitedStreetPenaltyPercent: Number(editEventForm.unvisitedStreetPenaltyPercent),
       });
       setShowEditEvent(false);
       setSuccess('Event updated.');
@@ -321,6 +324,7 @@ export function EventDetailPage() {
             <span>💰 £{parseFloat(view.startingBalance).toFixed(0)}</span>
             <span>📍 {view.proximityMetres}m</span>
             <span>👥 max {view.maxPlayersPerGame}/game</span>
+            <span>🏚️ {view.unvisitedStreetPenaltyPercent}% unvisited penalty</span>
           </div>
         </div>
         <div className="page-actions">
@@ -668,6 +672,15 @@ export function EventDetailPage() {
                 <label className="form-label">Max Players Per Game</label>
                 <input className="form-input" type="number" min="1" max="200" value={editEventForm.maxPlayersPerGame}
                   onChange={e => setEditEventForm(f => ({ ...f, maxPlayersPerGame: e.target.value }))} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Unvisited Street Penalty (% of rental cost)</label>
+                <input className="form-input" type="number" min="0" max="1000" value={editEventForm.unvisitedStreetPenaltyPercent}
+                  onChange={e => setEditEventForm(f => ({ ...f, unvisitedStreetPenaltyPercent: e.target.value }))} required />
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                  Charged per unvisited street at game end, as a percentage of its rental price. 150% keeps it cheaper to have visited (and paid rent) than to skip a street entirely.
+                </p>
               </div>
 
               <div className="modal-actions">

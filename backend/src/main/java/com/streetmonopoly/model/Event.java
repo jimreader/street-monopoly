@@ -17,6 +17,7 @@ public class Event {
     private BigDecimal startingBalance;
     private int proximityMetres;
     private int maxPlayersPerGame;
+    private int unvisitedStreetPenaltyPercent;
     private String status; // pending, active, completed
     private LocalDateTime createdAt;
     private LocalDateTime deletedAt;

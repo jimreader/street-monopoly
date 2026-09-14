@@ -15,6 +15,7 @@ public class Game {
     private LocalDateTime endTime;
     private BigDecimal startingBalance;
     private int proximityMetres;
+    private int unvisitedStreetPenaltyPercent;
     private String status; // pending, active, completed
     private LocalDateTime createdAt;
     private LocalDateTime deletedAt;

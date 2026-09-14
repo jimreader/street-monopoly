@@ -48,6 +48,7 @@ public class Dtos {
         @NotNull @Positive private BigDecimal startingBalance;
         @NotNull @Min(1) private Integer proximityMetres;
         @NotNull @Min(1) private Integer maxPlayersPerGame;
+        @NotNull @Min(0) private Integer unvisitedStreetPenaltyPercent;
         private String logoImageUrl;
     }
 
@@ -60,6 +61,7 @@ public class Dtos {
         @NotNull @Positive private BigDecimal startingBalance;
         @NotNull @Min(1) private Integer proximityMetres;
         @NotNull @Min(1) private Integer maxPlayersPerGame;
+        @NotNull @Min(0) private Integer unvisitedStreetPenaltyPercent;
         private String logoImageUrl;
     }
 
@@ -245,6 +247,7 @@ public class Dtos {
         private BigDecimal startingBalance;
         private int proximityMetres;
         private int maxPlayersPerGame;
+        private int unvisitedStreetPenaltyPercent;
         private String mapName;
         private List<EventGameSummary> games;
         private List<LeaderboardEntry> leaderboard;

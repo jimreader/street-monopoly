@@ -15,7 +15,8 @@ export function CreateGamePage() {
     endTime: '',
     startingBalance: '1500',
     proximityMetres: '50',
-    maxPlayersPerGame: '8'
+    maxPlayersPerGame: '8',
+    unvisitedStreetPenaltyPercent: '150'
   });
 
   useEffect(() => {
@@ -55,7 +56,8 @@ export function CreateGamePage() {
         endTime: toLocalDateTimePayload(form.endTime),
         startingBalance: parseFloat(form.startingBalance),
         proximityMetres: parseInt(form.proximityMetres, 10),
-        maxPlayersPerGame: parseInt(form.maxPlayersPerGame, 10)
+        maxPlayersPerGame: parseInt(form.maxPlayersPerGame, 10),
+        unvisitedStreetPenaltyPercent: parseInt(form.unvisitedStreetPenaltyPercent, 10)
       });
       navigate(`/events/${event.id}`);
     } catch (e) { setError(e.message); }
@@ -161,6 +163,15 @@ export function CreateGamePage() {
               onChange={e => setField('maxPlayersPerGame', e.target.value)} required />
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
               Players are invited to the event first. At start time, they are split across as many games as needed to keep each game at or below this limit.
+            </p>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Unvisited Street Penalty (% of rental cost)</label>
+            <input className="form-input" type="number" min="0" max="1000" value={form.unvisitedStreetPenaltyPercent}
+              onChange={e => setField('unvisitedStreetPenaltyPercent', e.target.value)} required />
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+              When the event ends, players are charged this percentage of a street's rental price for every street they never visited. 150% (the default) means it's always cheaper to have visited a street, even if you had to pay rent on it.
             </p>
           </div>
 

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -450,6 +451,9 @@ public class GameService {
         List<GamePlayer> players = gamePlayerMapper.findAllByGameId(game.getId());
         List<GameStreet> allStreets = gameStreetMapper.findByGameId(game.getId());
 
+        BigDecimal penaltyMultiplier = BigDecimal.valueOf(game.getUnvisitedStreetPenaltyPercent())
+                .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+
         for (GamePlayer gp : players) {
             BigDecimal finalBalance = gp.getBalance();
 
@@ -460,7 +464,8 @@ public class GameService {
                         game.getId(), gs.getStreetId(), gp.getPlayerId());
                 if (visit == null) {
                     Street street = gameMapMapper.findStreetById(gs.getStreetId());
-                    finalBalance = finalBalance.subtract(street.getRentalPrice());
+                    BigDecimal penalty = street.getRentalPrice().multiply(penaltyMultiplier).setScale(2, RoundingMode.HALF_UP);
+                    finalBalance = finalBalance.subtract(penalty);
                 }
             }
 

@@ -59,6 +59,7 @@ public class EventService {
         event.setStartingBalance(request.getStartingBalance());
         event.setProximityMetres(request.getProximityMetres());
         event.setMaxPlayersPerGame(request.getMaxPlayersPerGame());
+        event.setUnvisitedStreetPenaltyPercent(request.getUnvisitedStreetPenaltyPercent());
         event.setStatus("pending");
         eventMapper.insert(event);
         return eventMapper.findById(event.getId());
@@ -86,6 +87,7 @@ public class EventService {
         existing.setStartingBalance(request.getStartingBalance());
         existing.setProximityMetres(request.getProximityMetres());
         existing.setMaxPlayersPerGame(request.getMaxPlayersPerGame());
+        existing.setUnvisitedStreetPenaltyPercent(request.getUnvisitedStreetPenaltyPercent());
 
         int updated = eventMapper.updateDetails(existing);
         if (updated == 0) throw new RuntimeException("Event not found: " + eventId);
@@ -291,6 +293,7 @@ public class EventService {
         view.setStartingBalance(event.getStartingBalance());
         view.setProximityMetres(event.getProximityMetres());
         view.setMaxPlayersPerGame(event.getMaxPlayersPerGame());
+        view.setUnvisitedStreetPenaltyPercent(event.getUnvisitedStreetPenaltyPercent());
         view.setMapName(map != null ? map.getName() : null);
 
         List<EventGameSummary> gameSummaries = new ArrayList<>();
@@ -479,6 +482,7 @@ public class EventService {
             game.setEndTime(event.getEndTime());
             game.setStartingBalance(event.getStartingBalance());
             game.setProximityMetres(event.getProximityMetres());
+            game.setUnvisitedStreetPenaltyPercent(event.getUnvisitedStreetPenaltyPercent());
             game.setStatus("active");
             gameMapper.insert(game);
 
